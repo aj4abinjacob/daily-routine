@@ -1,0 +1,1769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cutting Programme — 4-Day Upper/Lower</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0a0a0b;--surface:#111113;--surface2:#18181b;--surface3:#222225;
+  --border:#2a2a2e;--border2:#3a3a3e;
+  --text:#e4e4e7;--text-dim:#a1a1aa;--text-muted:#71717a;
+  --amber:#f59e0b;--amber-dim:#b45309;--amber-bg:rgba(245,158,11,0.06);
+  --green:#34d399;--green-dim:#059669;--green-bg:rgba(52,211,153,0.06);
+  --blue:#60a5fa;--blue-dim:#2563eb;--blue-bg:rgba(96,165,250,0.06);
+  --orange:#fb923c;--orange-dim:#ea580c;--orange-bg:rgba(251,146,60,0.06);
+  --red:#f87171;--red-bg:rgba(248,113,113,0.06);
+  --purple:#a78bfa;--purple-bg:rgba(167,139,250,0.06);
+  --cyan:#22d3ee;
+}
+html{scroll-behavior:smooth;background:var(--bg)}
+body{font-family:'Outfit',sans-serif;color:var(--text);background:var(--bg);line-height:1.6;-webkit-font-smoothing:antialiased}
+
+/* ── HEADER ── */
+.hero{padding:3rem 1.5rem 2rem;text-align:center;position:relative;overflow:hidden;border-bottom:1px solid var(--border)}
+.hero::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(ellipse at 50% 0%,rgba(245,158,11,0.04) 0%,transparent 60%);pointer-events:none}
+.hero h1{font-size:clamp(1.8rem,5vw,3rem);font-weight:900;letter-spacing:-0.03em;background:linear-gradient(135deg,var(--amber),#fbbf24,var(--orange));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:0.25rem}
+.hero .sub{font-size:0.95rem;color:var(--text-muted);font-weight:400;max-width:600px;margin:0 auto}
+.meta-grid{display:flex;flex-wrap:wrap;gap:0.5rem;justify-content:center;margin-top:1.25rem}
+.meta-tag{font-family:'JetBrains Mono',monospace;font-size:0.7rem;padding:0.3rem 0.65rem;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text-dim);letter-spacing:0.02em;text-transform:uppercase}
+
+/* ── NAV ── */
+.nav{position:sticky;top:0;z-index:100;background:rgba(10,10,11,0.85);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:0 1rem}
+.nav-inner{max-width:900px;margin:0 auto;display:flex;gap:0;overflow-x:auto;scrollbar-width:none}
+.nav-inner::-webkit-scrollbar{display:none}
+.nav-btn{font-family:'Outfit',sans-serif;font-size:0.8rem;font-weight:600;padding:0.75rem 1rem;color:var(--text-muted);background:none;border:none;cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;transition:all 0.2s}
+.nav-btn:hover{color:var(--text)}
+.nav-btn.active{color:var(--amber);border-bottom-color:var(--amber)}
+
+/* ── LAYOUT ── */
+.container{max-width:900px;margin:0 auto;padding:0 1rem 4rem}
+.day-section{display:none;animation:fadeUp 0.3s ease}
+.day-section.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* ── DAY HEADER ── */
+.day-header{padding:2rem 0 1.5rem;border-bottom:1px solid var(--border)}
+.day-label{font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--amber);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.25rem}
+.day-title{font-size:clamp(1.4rem,3.5vw,1.8rem);font-weight:800;letter-spacing:-0.02em}
+.day-title span{color:var(--text-muted);font-weight:400}
+
+/* ── WARMUP / COOLDOWN BLOCKS ── */
+.protocol-block{margin:1.5rem 0;border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.protocol-header{padding:0.75rem 1rem;font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none}
+.protocol-header .chevron{transition:transform 0.2s;font-size:0.65rem;color:var(--text-muted)}
+.protocol-header.open .chevron{transform:rotate(180deg)}
+.protocol-warm{background:rgba(96,165,250,0.08);color:var(--blue)}
+.protocol-cool{background:rgba(167,139,250,0.08);color:var(--purple)}
+.protocol-body{padding:0 1rem;max-height:0;overflow:hidden;transition:max-height 0.3s ease,padding 0.3s ease}
+.protocol-body.open{max-height:500px;padding:0.75rem 1rem 1rem}
+.protocol-body li{font-size:0.85rem;color:var(--text-dim);margin-bottom:0.35rem;padding-left:0.25rem}
+
+/* ── EXERCISE CARD ── */
+.exercise{margin-top:1.75rem;border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--surface)}
+.exercise-head{padding:1rem 1.25rem;display:flex;align-items:baseline;gap:0.75rem;border-bottom:1px solid var(--border);cursor:pointer;user-select:none;transition:background 0.15s}
+.exercise-head:hover{background:var(--surface2)}
+.ex-num{font-family:'JetBrains Mono',monospace;font-size:0.75rem;font-weight:700;color:var(--amber);background:var(--amber-bg);border:1px solid rgba(245,158,11,0.15);width:1.75rem;height:1.75rem;display:flex;align-items:center;justify-content:center;border-radius:4px;flex-shrink:0}
+.ex-name{font-size:1rem;font-weight:700;flex:1}
+.ex-superset{font-size:0.7rem;color:var(--cyan);font-family:'JetBrains Mono',monospace;white-space:nowrap}
+.ex-toggle{color:var(--text-muted);font-size:0.7rem;transition:transform 0.2s}
+.exercise.open .ex-toggle{transform:rotate(180deg)}
+
+.exercise-body{max-height:0;overflow:hidden;transition:max-height 0.35s ease}
+.exercise.open .exercise-body{max-height:1200px}
+
+.research-note{padding:0.75rem 1.25rem;font-size:0.78rem;color:var(--blue);background:var(--blue-bg);border-bottom:1px solid var(--border);line-height:1.55}
+
+/* ── SET TABLE ── */
+.set-table{width:100%;border-collapse:collapse;font-size:0.82rem}
+.set-table thead{background:var(--surface2)}
+.set-table th{padding:0.5rem 0.75rem;text-align:left;font-size:0.68rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;border-bottom:1px solid var(--border)}
+.set-table td{padding:0.55rem 0.75rem;border-bottom:1px solid rgba(42,42,46,0.5);vertical-align:top}
+.set-table tr:last-child td{border-bottom:none}
+.set-table .col-weight{font-family:'JetBrains Mono',monospace;font-weight:600;white-space:nowrap}
+.set-table .col-reps{font-family:'JetBrains Mono',monospace;font-weight:600;white-space:nowrap}
+.set-table .col-rest{font-family:'JetBrains Mono',monospace;color:var(--text-muted);white-space:nowrap;font-size:0.78rem}
+.set-table .col-rpe{font-family:'JetBrains Mono',monospace;font-weight:700;white-space:nowrap}
+.set-table .col-notes{color:var(--text-dim);font-size:0.78rem;line-height:1.45;min-width:180px}
+
+/* Set type badges */
+.badge{font-family:'JetBrains Mono',monospace;font-size:0.62rem;font-weight:700;padding:0.15rem 0.45rem;border-radius:3px;text-transform:uppercase;letter-spacing:0.04em;white-space:nowrap}
+.badge-warmup{color:var(--blue);background:var(--blue-bg);border:1px solid rgba(96,165,250,0.15)}
+.badge-feeler{color:var(--purple);background:var(--purple-bg);border:1px solid rgba(167,139,250,0.15)}
+.badge-working{color:var(--green);background:var(--green-bg);border:1px solid rgba(52,211,153,0.15)}
+
+/* RPE coloring */
+.rpe-low{color:var(--green)}
+.rpe-mid{color:var(--amber)}
+.rpe-high{color:var(--orange)}
+.rpe-max{color:var(--red)}
+
+.tip-row{padding:0.65rem 1.25rem;font-size:0.78rem;color:var(--orange);background:var(--orange-bg);border-top:1px solid rgba(251,146,60,0.1)}
+.tip-row::before{content:'↳ ';opacity:0.6}
+
+/* ── VOLUME AUDIT ── */
+.volume-audit{margin-top:1.75rem;padding:1rem 1.25rem;background:var(--surface);border:1px solid var(--border);border-radius:8px;font-size:0.8rem;color:var(--text-dim);font-family:'JetBrains Mono',monospace}
+.volume-audit strong{color:var(--text);font-weight:700}
+
+/* ── VOLUME SUMMARY TAB ── */
+.summary-table{width:100%;border-collapse:collapse;font-size:0.82rem;margin-top:1.5rem}
+.summary-table th{padding:0.6rem 0.75rem;text-align:left;font-size:0.68rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;background:var(--surface2);border-bottom:1px solid var(--border)}
+.summary-table td{padding:0.55rem 0.75rem;border-bottom:1px solid var(--border);font-size:0.82rem}
+.summary-table .muscle{font-weight:600;color:var(--text)}
+.summary-table .num{font-family:'JetBrains Mono',monospace;text-align:center;font-weight:600;color:var(--text-dim)}
+.summary-table .num-active{color:var(--green)}
+.summary-table .total{font-family:'JetBrains Mono',monospace;color:var(--amber);font-weight:700;text-align:center}
+.summary-table .assess{font-size:0.78rem;color:var(--text-dim)}
+
+/* RPE Guide */
+.rpe-table{width:100%;border-collapse:collapse;font-size:0.82rem;margin-top:1.5rem}
+.rpe-table th{padding:0.6rem 0.75rem;text-align:left;font-size:0.68rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;background:var(--surface2);border-bottom:1px solid var(--border)}
+.rpe-table td{padding:0.55rem 0.75rem;border-bottom:1px solid var(--border)}
+.rpe-table .rpe-val{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:0.9rem}
+.rpe-table .rir-val{font-family:'JetBrains Mono',monospace;font-weight:600}
+
+.key-rule{margin-top:1.5rem;padding:1rem 1.25rem;background:var(--orange-bg);border:1px solid rgba(251,146,60,0.15);border-radius:8px;font-size:0.85rem;color:var(--orange);line-height:1.55}
+
+/* ── RESPONSIVE ── */
+.table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+@media(max-width:640px){
+  .hero{padding:2rem 1rem 1.5rem}
+  .exercise-head{padding:0.85rem 1rem}
+  .set-table th,.set-table td{padding:0.45rem 0.5rem;font-size:0.75rem}
+  .set-table .col-notes{min-width:140px}
+  .research-note{padding:0.6rem 1rem;font-size:0.72rem}
+  .nav-btn{font-size:0.72rem;padding:0.65rem 0.7rem}
+}
+
+/* ── STEPS TIMELINE ── */
+.step-timeline{position:relative;padding:0.5rem 0 1rem}
+.step-row{display:grid;grid-template-columns:70px 40px 1fr;gap:0 1rem;align-items:start;position:relative;padding:0.75rem 0}
+.step-row::before{content:'';position:absolute;left:89px;top:0;bottom:0;width:2px;background:var(--border)}
+.step-row:last-child::before{display:none}
+.step-time{font-family:'JetBrains Mono',monospace;font-size:0.78rem;font-weight:600;text-align:right;padding-top:0.15rem}
+.step-dot{width:12px;height:12px;border-radius:50%;margin-top:0.25rem;position:relative;z-index:1;justify-self:center;flex-shrink:0;border:2px solid}
+.step-content{padding-bottom:0.25rem}
+.step-label{font-size:0.85rem;font-weight:600;color:var(--text);margin-bottom:0.15rem}
+.step-desc{font-size:0.8rem;color:var(--text-dim);line-height:1.5}
+.step-count{font-family:'JetBrains Mono',monospace;font-size:0.72rem;font-weight:700;margin-top:0.25rem;display:inline-block;padding:0.15rem 0.5rem;border-radius:3px}
+.step-bar-wrap{margin-top:2rem;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.25rem}
+.step-bar-track{height:28px;background:var(--surface2);border-radius:6px;overflow:hidden;position:relative;margin:0.75rem 0 0.5rem}
+.step-bar-fill{height:100%;border-radius:6px;transition:width 1s ease}
+.step-bar-labels{display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--text-muted)}
+.step-bar-milestone{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--text-muted);opacity:0.3}
+.day-type-cards{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1.5rem}
+@media(max-width:640px){.day-type-cards{grid-template-columns:1fr}.step-row{grid-template-columns:58px 30px 1fr;gap:0 0.6rem}}
+.day-card{border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--surface)}
+.day-card-head{padding:0.75rem 1rem;font-weight:700;font-size:0.82rem;border-bottom:1px solid var(--border)}
+.day-card-body{padding:1rem;font-size:0.82rem;color:var(--text-dim);line-height:1.6}
+/* ── ROUTE MAP ── */
+.route-toggle{font-family:'JetBrains Mono',monospace;font-size:0.72rem;font-weight:600;padding:0.4rem 0.85rem;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text-muted);cursor:pointer;transition:all 0.15s;text-transform:uppercase;letter-spacing:0.04em}
+.route-toggle:hover{border-color:var(--border2);color:var(--text)}
+.route-toggle.active{background:var(--amber-bg);color:var(--amber);border-color:rgba(245,158,11,0.3)}
+.route-map{margin-top:1.5rem;padding-bottom:1rem}
+.route-path{position:relative;padding-left:1rem}
+
+.zone{position:relative;padding:0.5rem 0 0.25rem;margin-bottom:0}
+.zone-label{font-family:'JetBrains Mono',monospace;font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;padding:0.5rem 0 0.4rem 3rem;color:var(--text-muted)}
+.zone-morning .zone-label{color:#fbbf24}
+.zone-gym .zone-label{color:var(--amber)}
+.zone-work .zone-label{color:var(--blue)}
+.zone-break .zone-label{color:var(--green)}
+.zone-evening .zone-label{color:var(--purple)}
+.zone-night .zone-label{color:#818cf8}
+
+.node{display:flex;align-items:flex-start;gap:0.75rem;padding:0.35rem 0;position:relative}
+.node-time{font-family:'JetBrains Mono',monospace;font-size:0.72rem;font-weight:700;color:var(--text-muted);width:2.5rem;text-align:right;padding-top:0.55rem;flex-shrink:0}
+.node-dot{width:18px;height:18px;border-radius:50%;background:var(--surface3);border:3px solid var(--text-muted);flex-shrink:0;margin-top:0.45rem;position:relative;z-index:2;transition:transform 0.2s,box-shadow 0.2s}
+.node:hover .node-dot{transform:scale(1.3);box-shadow:0 0 12px rgba(255,255,255,0.1)}
+.dot-orange{border-color:var(--orange);background:var(--orange-bg)}
+.dot-amber{border-color:var(--amber);background:var(--amber-bg)}
+.dot-green{border-color:var(--green);background:var(--green-bg)}
+.dot-blue{border-color:var(--blue);background:var(--blue-bg)}
+.dot-purple{border-color:var(--purple);background:var(--purple-bg)}
+.dot-sleep{border-color:#818cf8;background:rgba(129,140,248,0.15);width:22px;height:22px;border-width:3px}
+
+.node-card{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:0.6rem 0.85rem;transition:border-color 0.15s,transform 0.15s}
+.node:hover .node-card{border-color:var(--border2);transform:translateX(3px)}
+.card-highlight{border-left:3px solid var(--amber)}
+.card-brain{border-left:3px solid var(--purple);background:var(--purple-bg)}
+.card-sleep{border-left:3px solid #818cf8;background:rgba(129,140,248,0.04)}
+.node-title{font-size:0.85rem;font-weight:700;color:var(--text);margin-bottom:0.15rem}
+.node-desc{font-size:0.78rem;color:var(--text-dim);line-height:1.45}
+.node-stat{display:flex;gap:0.6rem;margin-top:0.35rem}
+.stat-p{font-family:'JetBrains Mono',monospace;font-size:0.68rem;font-weight:700;color:var(--orange);background:var(--orange-bg);padding:0.1rem 0.4rem;border-radius:3px}
+.stat-c{font-family:'JetBrains Mono',monospace;font-size:0.68rem;font-weight:600;color:var(--text-muted);background:var(--surface2);padding:0.1rem 0.4rem;border-radius:3px}
+.stat-dur{font-family:'JetBrains Mono',monospace;font-size:0.68rem;font-weight:600;color:var(--amber);background:var(--amber-bg);padding:0.1rem 0.4rem;border-radius:3px}
+
+.path-segment{width:3px;height:20px;background:linear-gradient(to bottom,var(--border2),var(--border));margin:0 0 0 calc(2.5rem + 0.75rem + 7px);border-radius:2px}
+.seg-short{height:12px}
+
+.path-connector{display:flex;align-items:center;gap:0.6rem;padding:0.6rem 0 0.6rem calc(2.5rem + 0.75rem - 4px);position:relative}
+.connector-line{width:3px;height:28px;background:linear-gradient(to bottom,var(--border2) 0%,var(--amber) 50%,var(--border2) 100%);border-radius:2px;margin-left:8px}
+.connector-icon{font-size:1rem;background:var(--surface2);border:1px solid var(--border);border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;position:absolute;left:calc(2.5rem + 0.75rem - 5px);top:50%;transform:translateY(-50%)}
+
+.route-summary{display:grid;grid-template-columns:repeat(5,1fr);gap:0.75rem;margin-top:2rem;padding:1rem;background:var(--surface);border:1px solid var(--border);border-radius:8px}
+.route-stat{text-align:center}
+.route-stat-num{display:block;font-family:'JetBrains Mono',monospace;font-size:1.1rem;font-weight:800;color:var(--amber)}
+.route-stat-label{font-size:0.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em}
+
+@media(max-width:640px){
+  .node-card{padding:0.5rem 0.65rem}
+  .node-title{font-size:0.8rem}
+  .node-desc{font-size:0.72rem}
+  .route-summary{grid-template-columns:repeat(2,1fr)}
+  .connector-icon{width:24px;height:24px;font-size:0.8rem}
+}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>Cutting Programme</h1>
+  <p class="sub">4-Day Upper/Lower — Research-optimized for hypertrophy retention in a caloric deficit</p>
+  <div class="meta-grid">
+    <span class="meta-tag">Advanced Natural</span>
+    <span class="meta-tag">~91 kg</span>
+    <span class="meta-tag">Caloric Deficit</span>
+    <span class="meta-tag">Mon / Tue / Thu / Fri</span>
+  </div>
+</div>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <button class="nav-btn active" data-tab="upper-a">Upper A</button>
+    <button class="nav-btn" data-tab="lower-a">Lower A</button>
+    <button class="nav-btn" data-tab="upper-b">Upper B</button>
+    <button class="nav-btn" data-tab="lower-b">Lower B</button>
+    <button class="nav-btn" data-tab="cardio">Cardio</button>
+    <button class="nav-btn" data-tab="daily">Daily</button>
+    <button class="nav-btn" data-tab="route">Route</button>
+    <button class="nav-btn" data-tab="volume">Volume</button>
+    <button class="nav-btn" data-tab="rpe">RPE Guide</button>
+  </div>
+</nav>
+
+<div class="container">
+
+<!-- ═══════════════════════════════════════════════════ UPPER A ═══════════════════════════════════════════════════ -->
+<section class="day-section active" id="upper-a">
+  <div class="day-header">
+    <div class="day-label">Monday</div>
+    <div class="day-title">Upper A <span>— Strength Focus</span></div>
+  </div>
+
+  <div class="protocol-block">
+    <div class="protocol-header protocol-warm" onclick="toggleProtocol(this)">
+      Pre-Workout Dynamic Warm-Up <span class="chevron">▼</span>
+    </div>
+    <div class="protocol-body">
+      <ol>
+        <li>Brisk walk / incline treadmill — 3 min (raise core temp)</li>
+        <li>Arm circles forward + backward — 30s each direction (shoulder joint)</li>
+        <li>Band pull-aparts — 15 reps (scapular activation)</li>
+        <li>Incline push-ups hands on bench — 10 reps slow (chest activation at ~40% BW)</li>
+        <li>Cat-cow + thoracic rotations — 5 each (spine mobility for pressing/pulling)</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="exercise open">
+    <div class="exercise-head" onclick="toggleExercise(this)">
+      <span class="ex-num">1</span>
+      <span class="ex-name">Dumbbell Incline Bench Press</span>
+      <span class="ex-toggle">▼</span>
+    </div>
+    <div class="exercise-body">
+      <div class="research-note">REP RANGE: 5–8 · Compound press — SBS recommends 5–10 for pressing to maintain form quality. At 91 kg, going under 5 reps with DBs is unstable. 5–8 maximizes mechanical tension while keeping shoulders safe.</div>
+      <div class="table-scroll"><table class="set-table"><thead><tr><th>Weight</th><th>Reps</th><th>Rest</th><th>RPE</th><th>Type</th><th>Notes</th></tr></thead><tbody>
+        <tr><td class="col-weight">12.5 kg</td><td class="col-reps">8</td><td class="col-rest">60s</td><td class="col-rpe">—</td><td><span class="badge badge-warmup">Warmup</span></td><td class="col-notes">Light groove</td></tr>
+        <tr><td class="col-weight">25 kg</td><td class="col-reps">5</td><td class="col-rest">60s</td><td class="col-rpe">—</td><td><span class="badge badge-warmup">Warmup</span></td><td class="col-notes">Ramp</td></tr>
+        <tr><td class="col-weight">42.5 kg</td><td class="col-reps">5–8</td><td class="col-rest">2.5 min</td><td class="col-rpe rpe-low">7</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">~3 RIR. First set conservative — gauge your day.</td></tr>
+        <tr><td class="col-weight">42.5 kg</td><td class="col-reps">5–8</td><td class="col-rest">2.5 min</td><td class="col-rpe rpe-mid">8</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">~2 RIR. Harder but not grinding reps.</td></tr>
+        <tr><td class="col-weight">42.5 kg</td><td class="col-reps">5–8</td><td class="col-rest">2.5 min</td><td class="col-rpe rpe-high">8–9</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">1–2 RIR. Push this last set. Stop when form breaks.</td></tr>
+      </tbody></table></div>
+      <div class="tip-row">Progression: when you hit 8-8-8, go to 45 kg.</div>
+    </div>
+  </div>
+
+  <div class="exercise">
+    <div class="exercise-head" onclick="toggleExercise(this)">
+      <span class="ex-num">2</span>
+      <span class="ex-name">Bar Lateral Pulldown</span>
+      <span class="ex-toggle">▼</span>
+    </div>
+    <div class="exercise-body">
+      <div class="research-note">REP RANGE: 6–10 · SBS recommends 5–10 for pulldowns. Lower reps maintain form (no kipping). Higher than 10 = momentum and bicep dominance. 6–10 keeps lats as primary mover.</div>
+      <div class="table-scroll"><table class="set-table"><thead><tr><th>Weight</th><th>Reps</th><th>Rest</th><th>RPE</th><th>Type</th><th>Notes</th></tr></thead><tbody>
+        <tr><td class="col-weight">35 kg</td><td class="col-reps">8</td><td class="col-rest">60s</td><td class="col-rpe">—</td><td><span class="badge badge-warmup">Warmup</span></td><td class="col-notes">Warmup</td></tr>
+        <tr><td class="col-weight">90 kg</td><td class="col-reps">6–10</td><td class="col-rest">2 min</td><td class="col-rpe rpe-low">7</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">Clean reps, full stretch at top.</td></tr>
+        <tr><td class="col-weight">90 kg</td><td class="col-reps">6–10</td><td class="col-rest">2 min</td><td class="col-rpe rpe-mid">8</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">Should feel 2 reps left in the tank.</td></tr>
+        <tr><td class="col-weight">90 kg</td><td class="col-reps">6–10</td><td class="col-rest">2 min</td><td class="col-rpe rpe-high">8–9</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">Last set — push it. Full ROM, no half reps at top.</td></tr>
+      </tbody></table></div>
+    </div>
+  </div>
+
+  <div class="exercise">
+    <div class="exercise-head" onclick="toggleExercise(this)">
+      <span class="ex-num">3</span>
+      <span class="ex-name">Lever Seated Shoulder Press</span>
+      <span class="ex-toggle">▼</span>
+    </div>
+    <div class="exercise-body">
+      <div class="research-note">REP RANGE: 6–10 · Compound press. RP recommends 5–10 for machine presses. Too heavy (&lt;5) irritates AC joint. 6–10 balances strength stimulus with joint safety on overhead movement.</div>
+      <div class="table-scroll"><table class="set-table"><thead><tr><th>Weight</th><th>Reps</th><th>Rest</th><th>RPE</th><th>Type</th><th>Notes</th></tr></thead><tbody>
+        <tr><td class="col-weight">25 kg</td><td class="col-reps">8</td><td class="col-rest">60s</td><td class="col-rpe">—</td><td><span class="badge badge-warmup">Warmup</span></td><td class="col-notes">Warmup</td></tr>
+        <tr><td class="col-weight">55 kg</td><td class="col-reps">6–10</td><td class="col-rest">90s</td><td class="col-rpe rpe-low">7–8</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">Stay here and own the range.</td></tr>
+        <tr><td class="col-weight">55 kg</td><td class="col-reps">6–10</td><td class="col-rest">90s</td><td class="col-rpe rpe-mid">8</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">Controlled negative, no bouncing.</td></tr>
+        <tr><td class="col-weight">55 kg</td><td class="col-reps">6–10</td><td class="col-rest">90s</td><td class="col-rpe rpe-high">8–9</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">When 10-10-10, go to 57.5 or 60 kg.</td></tr>
+      </tbody></table></div>
+    </div>
+  </div>
+
+  <div class="exercise">
+    <div class="exercise-head" onclick="toggleExercise(this)">
+      <span class="ex-num">4</span>
+      <span class="ex-name">Cable Straight Back Seated Row</span>
+      <span class="ex-toggle">▼</span>
+    </div>
+    <div class="exercise-body">
+      <div class="research-note">REP RANGE: 8–12 · SBS recommends 8–15 for rows — too heavy turns rows into hip hinge. Cable row with strict form needs moderate load. 8–12 keeps back as limiter.</div>
+      <div class="table-scroll"><table class="set-table"><thead><tr><th>Weight</th><th>Reps</th><th>Rest</th><th>RPE</th><th>Type</th><th>Notes</th></tr></thead><tbody>
+        <tr><td class="col-weight">35 kg</td><td class="col-reps">8</td><td class="col-rest">60s</td><td class="col-rpe">—</td><td><span class="badge badge-warmup">Warmup</span></td><td class="col-notes">Warmup</td></tr>
+        <tr><td class="col-weight">80 kg</td><td class="col-reps">8–12</td><td class="col-rest">90s</td><td class="col-rpe rpe-low">7–8</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">Chest up, pull to lower chest, 1s squeeze.</td></tr>
+        <tr><td class="col-weight">80 kg</td><td class="col-reps">8–12</td><td class="col-rest">90s</td><td class="col-rpe rpe-mid">8</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">RPE 8.</td></tr>
+        <tr><td class="col-weight">80 kg</td><td class="col-reps">8–12</td><td class="col-rest">90s</td><td class="col-rpe rpe-high">8–9</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">When 12-12-12, go to 85 kg.</td></tr>
+      </tbody></table></div>
+    </div>
+  </div>
+
+  <div class="exercise">
+    <div class="exercise-head" onclick="toggleExercise(this)">
+      <span class="ex-num">5</span>
+      <span class="ex-name">Cable Leaning Lateral Raise</span>
+      <span class="ex-toggle">▼</span>
+    </div>
+    <div class="exercise-body">
+      <div class="research-note">REP RANGE: 12–20 · Side delts are small, high slow-twitch%. RP/SBS: isolation = 10–20+, side delts specifically 12–20. Heavy lateral raises recruit traps, not delts. Cable provides constant tension.</div>
+      <div class="table-scroll"><table class="set-table"><thead><tr><th>Weight</th><th>Reps</th><th>Rest</th><th>RPE</th><th>Type</th><th>Notes</th></tr></thead><tbody>
+        <tr><td class="col-weight">15 kg</td><td class="col-reps">8</td><td class="col-rest">45s</td><td class="col-rpe rpe-low">4–5</td><td><span class="badge badge-feeler">Feeler</span></td><td class="col-notes">Warm shoulder in this pattern</td></tr>
+        <tr><td class="col-weight">30 kg</td><td class="col-reps">12–20</td><td class="col-rest">60s</td><td class="col-rpe rpe-high">8–9</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">Strict form, no momentum.</td></tr>
+        <tr><td class="col-weight">30 kg</td><td class="col-reps">12–20</td><td class="col-rest">60s</td><td class="col-rpe rpe-max">9–10</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">Last set — go to failure. Safe on isolations.</td></tr>
+      </tbody></table></div>
+      <div class="tip-row">PLATEAU TIP: Try 3-sec eccentrics if stuck.</div>
+    </div>
+  </div>
+
+  <div class="exercise">
+    <div class="exercise-head" onclick="toggleExercise(this)">
+      <span class="ex-num">6</span>
+      <span class="ex-name">Omni Direction Face Pull (with Rope)</span>
+      <span class="ex-toggle">▼</span>
+    </div>
+    <div class="exercise-body">
+      <div class="research-note">REP RANGE: 15–25 · Rear delts = small, high slow-twitch%. Very safe joint-wise. RP recommends 15–25 for rear delts. Higher reps = more metabolic stress which rear delts respond to.</div>
+      <div class="table-scroll"><table class="set-table"><thead><tr><th>Weight</th><th>Reps</th><th>Rest</th><th>RPE</th><th>Type</th><th>Notes</th></tr></thead><tbody>
+        <tr><td class="col-weight">25 kg</td><td class="col-reps">8</td><td class="col-rest">45s</td><td class="col-rpe rpe-low">4–5</td><td><span class="badge badge-feeler">Feeler</span></td><td class="col-notes">Feel rear delts + external rotators</td></tr>
+        <tr><td class="col-weight">40 kg</td><td class="col-reps">15–25</td><td class="col-rest">60s</td><td class="col-rpe rpe-high">8–9</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">40 kg targets rear delts properly at this rep range.</td></tr>
+        <tr><td class="col-weight">40 kg</td><td class="col-reps">15–25</td><td class="col-rest">60s</td><td class="col-rpe rpe-max">9–10</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">Go to failure. Pull to forehead, elbows high, external rotate.</td></tr>
+      </tbody></table></div>
+    </div>
+  </div>
+
+  <div class="exercise">
+    <div class="exercise-head" onclick="toggleExercise(this)">
+      <span class="ex-num">7</span>
+      <span class="ex-name">Triceps Pushdown</span>
+      <span class="ex-superset">⟵ SS #8</span>
+      <span class="ex-toggle">▼</span>
+    </div>
+    <div class="exercise-body">
+      <div class="research-note">REP RANGE: 10–15 · Single-joint, elbow-only movement. RP: 10–15 for pushdowns. Going heavy (&lt;8) stresses elbows. Triceps get heavy work from all pressing — this is volume/pump work.</div>
+      <div class="table-scroll"><table class="set-table"><thead><tr><th>Weight</th><th>Reps</th><th>Rest</th><th>RPE</th><th>Type</th><th>Notes</th></tr></thead><tbody>
+        <tr><td class="col-weight">40 kg</td><td class="col-reps">8</td><td class="col-rest">45s</td><td class="col-rpe rpe-low">4–5</td><td><span class="badge badge-feeler">Feeler</span></td><td class="col-notes">Warm elbows</td></tr>
+        <tr><td class="col-weight">70 kg</td><td class="col-reps">10–15</td><td class="col-rest">0s → curl</td><td class="col-rpe rpe-high">8–9</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">Go straight to curls.</td></tr>
+        <tr><td class="col-weight">70 kg</td><td class="col-reps">10–15</td><td class="col-rest">0s → curl</td><td class="col-rpe rpe-max">9–10</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">Last set to failure. Then curls.</td></tr>
+      </tbody></table></div>
+    </div>
+  </div>
+
+  <div class="exercise">
+    <div class="exercise-head" onclick="toggleExercise(this)">
+      <span class="ex-num">8</span>
+      <span class="ex-name">Dumbbell Incline Curl</span>
+      <span class="ex-superset">⟵ SS #7</span>
+      <span class="ex-toggle">▼</span>
+    </div>
+    <div class="exercise-body">
+      <div class="research-note">REP RANGE: 8–12 · Incline curl = stretched position for bicep, safe on joints. SBS: 8+ for curls. Not too high (&gt;15) because grip fails before bicep. 8–12 sweet spot.</div>
+      <div class="table-scroll"><table class="set-table"><thead><tr><th>Weight</th><th>Reps</th><th>Rest</th><th>RPE</th><th>Type</th><th>Notes</th></tr></thead><tbody>
+        <tr><td class="col-weight">15 kg</td><td class="col-reps">8–12</td><td class="col-rest">90s → #7</td><td class="col-rpe rpe-high">8–9</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">15 kg for solid 8–12 both sets.</td></tr>
+        <tr><td class="col-weight">15 kg</td><td class="col-reps">8–12</td><td class="col-rest">90s → #7</td><td class="col-rpe rpe-max">9–10</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">Last set close to failure. 90s rest then back to pushdown.</td></tr>
+      </tbody></table></div>
+      <div class="tip-row">When 12-12, go to 17.5.</div>
+    </div>
+  </div>
+
+  <div class="volume-audit"><strong>Volume Audit — Upper A:</strong> Chest 3 · Back 6 · Shoulders (press) 3 · Shoulders (side) 2 · Shoulders (rear) 2 · Triceps 2 · Biceps 2 · <strong>Total = 20 working sets</strong></div>
+
+  <div class="protocol-block">
+    <div class="protocol-header protocol-cool" onclick="toggleProtocol(this)">
+      Post-Workout Static Stretching <span class="chevron">▼</span>
+    </div>
+    <div class="protocol-body">
+      <ol>
+        <li>Doorway chest stretch — 45s/side (pecs tight from pressing)</li>
+        <li>Cross-body shoulder stretch — 30s/side (posterior shoulder)</li>
+        <li>Overhead triceps stretch — 30s/side (triceps long head)</li>
+        <li>Dead hang from bar — 30–45s (lats, spine decompression)</li>
+        <li>Neck tilts ear to shoulder — 20s/side (traps/neck)</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ LOWER A ═══════════════════════════════════════════════════ -->
+<section class="day-section" id="lower-a">
+  <div class="day-header">
+    <div class="day-label">Tuesday</div>
+    <div class="day-title">Lower A <span>— Strength Focus (Quad Emphasis)</span></div>
+  </div>
+
+  <div class="protocol-block">
+    <div class="protocol-header protocol-warm" onclick="toggleProtocol(this)">Pre-Workout Dynamic Warm-Up <span class="chevron">▼</span></div>
+    <div class="protocol-body"><ol>
+      <li>Brisk walk / incline treadmill — 3 min</li>
+      <li>Bodyweight squats — 12–15 reps, 2s down 1s up</li>
+      <li>Walking lunges — 8/leg (hip flexor opening)</li>
+      <li>Leg swings front-back + side-to-side — 10 each/leg</li>
+      <li>Glute bridges — 12 reps, squeeze 2s at top</li>
+      <li>Dead bugs slow — 6/side, exhale on extension (core activation WITHOUT fatiguing abs)</li>
+    </ol></div>
+  </div>
+
+  <div class="exercise open">
+    <div class="exercise-head" onclick="toggleExercise(this)"><span class="ex-num">1</span><span class="ex-name">Barbell Full Squat</span><span class="ex-toggle">▼</span></div>
+    <div class="exercise-body">
+      <div class="research-note">REP RANGE: 4–6 · Heavy compound, high technical demand. SBS: 5–10 for squats. In a deficit, 4–6 maximizes strength retention signal with minimal fatigue accumulation. Helms 2016: compounds at RPE 6–8.</div>
+      <div class="table-scroll"><table class="set-table"><thead><tr><th>Weight</th><th>Reps</th><th>Rest</th><th>RPE</th><th>Type</th><th>Notes</th></tr></thead><tbody>
+        <tr><td class="col-weight">Bar (20 kg)</td><td class="col-reps">8</td><td class="col-rest">60s</td><td class="col-rpe">—</td><td><span class="badge badge-warmup">Warmup</span></td><td class="col-notes">Groove</td></tr>
+        <tr><td class="col-weight">60 kg</td><td class="col-reps">5</td><td class="col-rest">90s</td><td class="col-rpe">—</td><td><span class="badge badge-warmup">Warmup</span></td><td class="col-notes">Ramp</td></tr>
+        <tr><td class="col-weight">100 kg</td><td class="col-reps">3</td><td class="col-rest">90s</td><td class="col-rpe">—</td><td><span class="badge badge-warmup">Warmup</span></td><td class="col-notes">Ramp</td></tr>
+        <tr><td class="col-weight">145 kg</td><td class="col-reps">4–6</td><td class="col-rest">3 min</td><td class="col-rpe rpe-low">7</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">3 RIR. First set feel the load, don't grind.</td></tr>
+        <tr><td class="col-weight">145 kg</td><td class="col-reps">4–6</td><td class="col-rest">3 min</td><td class="col-rpe rpe-low">7–8</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">2–3 RIR.</td></tr>
+        <tr><td class="col-weight">145 kg</td><td class="col-reps">4–6</td><td class="col-rest">3 min</td><td class="col-rpe rpe-mid">8</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">2 RIR. NEVER go to failure on heavy squats in a deficit.</td></tr>
+      </tbody></table></div>
+    </div>
+  </div>
+
+  <div class="exercise"><div class="exercise-head" onclick="toggleExercise(this)"><span class="ex-num">2</span><span class="ex-name">Sled Wide Hack Squat</span><span class="ex-toggle">▼</span></div><div class="exercise-body">
+    <div class="research-note">REP RANGE: 8–12 · Machine compound, zero spinal load. Can push harder safely. 8–12 for hypertrophy stimulus without CNS drain after heavy squats.</div>
+    <div class="table-scroll"><table class="set-table"><thead><tr><th>Weight</th><th>Reps</th><th>Rest</th><th>RPE</th><th>Type</th><th>Notes</th></tr></thead><tbody>
+      <tr><td class="col-weight">80 kg</td><td class="col-reps">6</td><td class="col-rest">60s</td><td class="col-rpe">—</td><td><span class="badge badge-warmup">Warmup</span></td><td class="col-notes">Ramp</td></tr>
+      <tr><td class="col-weight">160 kg</td><td class="col-reps">8–12</td><td class="col-rest">2 min</td><td class="col-rpe rpe-mid">8</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">After heavy squats, expect ~8–10 reps.</td></tr>
+      <tr><td class="col-weight">160 kg</td><td class="col-reps">8–12</td><td class="col-rest">2 min</td><td class="col-rpe rpe-high">8–9</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">RPE 8–9.</td></tr>
+      <tr><td class="col-weight">160 kg</td><td class="col-reps">8–12</td><td class="col-rest">2 min</td><td class="col-rpe rpe-high">9</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">Last set push hard. Machine = safe to go closer to failure.</td></tr>
+    </tbody></table></div>
+  </div></div>
+
+  <div class="exercise"><div class="exercise-head" onclick="toggleExercise(this)"><span class="ex-num">3</span><span class="ex-name">Lever Leg Extension</span><span class="ex-toggle">▼</span></div><div class="exercise-body">
+    <div class="research-note">REP RANGE: 10–15 · Single-joint, very safe. Quads respond well to moderate-high reps. Tension curve is ascending (hardest at top) = great for squeeze/hold.</div>
+    <div class="table-scroll"><table class="set-table"><thead><tr><th>Weight</th><th>Reps</th><th>Rest</th><th>RPE</th><th>Type</th><th>Notes</th></tr></thead><tbody>
+      <tr><td class="col-weight">40 kg</td><td class="col-reps">8</td><td class="col-rest">45s</td><td class="col-rpe">—</td><td><span class="badge badge-warmup">Warmup</span></td><td class="col-notes">Warm quads</td></tr>
+      <tr><td class="col-weight">90 kg</td><td class="col-reps">10–15</td><td class="col-rest">60s</td><td class="col-rpe rpe-high">8–9</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">Squeeze 1s at top.</td></tr>
+      <tr><td class="col-weight">90 kg</td><td class="col-reps">10–15</td><td class="col-rest">60s</td><td class="col-rpe rpe-max">9–10</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">Last set to failure. When 15-15, go to 95.</td></tr>
+    </tbody></table></div>
+    <div class="tip-row">PLATEAU TIP: Try 2s pause at top contraction.</div>
+  </div></div>
+
+  <div class="exercise"><div class="exercise-head" onclick="toggleExercise(this)"><span class="ex-num">4</span><span class="ex-name">Lever Seated Leg Curl</span><span class="ex-toggle">▼</span></div><div class="exercise-body">
+    <div class="research-note">REP RANGE: 8–12 · Seated curl = hip flexed position = longer hamstring muscle length. Maeo 2021: seated/hip-flexed curl > prone for hamstring growth. Lower B covers shortened position with lying curl + RDL for stretched position.</div>
+    <div class="table-scroll"><table class="set-table"><thead><tr><th>Weight</th><th>Reps</th><th>Rest</th><th>RPE</th><th>Type</th><th>Notes</th></tr></thead><tbody>
+      <tr><td class="col-weight">30 kg</td><td class="col-reps">8</td><td class="col-rest">45s</td><td class="col-rpe">—</td><td><span class="badge badge-warmup">Warmup</span></td><td class="col-notes">Warm hamstrings</td></tr>
+      <tr><td class="col-weight">45 kg</td><td class="col-reps">8–12</td><td class="col-rest">60s</td><td class="col-rpe rpe-high">8–9</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">Proper working zone.</td></tr>
+      <tr><td class="col-weight">45 kg</td><td class="col-reps">8–12</td><td class="col-rest">60s</td><td class="col-rpe rpe-high">9</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">1 RIR. Controlled reps. When 12-12-12, go to 50.</td></tr>
+      <tr><td class="col-weight">45 kg</td><td class="col-reps">8–12</td><td class="col-rest">60s</td><td class="col-rpe rpe-max">9–10</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">Last set to failure — safe on machine.</td></tr>
+    </tbody></table></div>
+    <div class="tip-row">PLATEAU TIP: Add a 3-sec eccentric on each rep.</div>
+  </div></div>
+
+  <div class="exercise"><div class="exercise-head" onclick="toggleExercise(this)"><span class="ex-num">5</span><span class="ex-name">Smith Hip Thrust</span><span class="ex-toggle">▼</span></div><div class="exercise-body">
+    <div class="research-note">REP RANGE: 10–15 · Glute isolation. Full lockout = peak contraction. Smith machine = stable bar path, safe for progressive overload. Both lower days include direct glute work for frequency.</div>
+    <div class="table-scroll"><table class="set-table"><thead><tr><th>Weight</th><th>Reps</th><th>Rest</th><th>RPE</th><th>Type</th><th>Notes</th></tr></thead><tbody>
+      <tr><td class="col-weight">60 kg</td><td class="col-reps">8</td><td class="col-rest">60s</td><td class="col-rpe">—</td><td><span class="badge badge-warmup">Warmup</span></td><td class="col-notes">Feel glutes, full lockout</td></tr>
+      <tr><td class="col-weight">100 kg</td><td class="col-reps">10–15</td><td class="col-rest">90s</td><td class="col-rpe rpe-low">7–8</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">Find your groove.</td></tr>
+      <tr><td class="col-weight">100 kg</td><td class="col-reps">10–15</td><td class="col-rest">90s</td><td class="col-rpe rpe-mid">8</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">Full hip extension, 1s squeeze at top. Drive through heels.</td></tr>
+      <tr><td class="col-weight">100 kg</td><td class="col-reps">10–15</td><td class="col-rest">90s</td><td class="col-rpe rpe-high">8–9</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">When 15-15-15, go to 110.</td></tr>
+    </tbody></table></div>
+  </div></div>
+
+  <div class="exercise"><div class="exercise-head" onclick="toggleExercise(this)"><span class="ex-num">6</span><span class="ex-name">Lever Standing Calf Raise</span><span class="ex-toggle">▼</span></div><div class="exercise-body">
+    <div class="research-note">REP RANGE: 8–15 · Standing calf raise = 5–12% more growth than seated for gastrocnemius. Full ROM critical — 2s pause at bottom stretch, squeeze at top. 8–15 because gastrocnemius is mixed fiber.</div>
+    <div class="table-scroll"><table class="set-table"><thead><tr><th>Weight</th><th>Reps</th><th>Rest</th><th>RPE</th><th>Type</th><th>Notes</th></tr></thead><tbody>
+      <tr><td class="col-weight">40 kg</td><td class="col-reps">8</td><td class="col-rest">45s</td><td class="col-rpe">—</td><td><span class="badge badge-warmup">Warmup</span></td><td class="col-notes">Full stretch at bottom</td></tr>
+      <tr><td class="col-weight">110 kg</td><td class="col-reps">8–15</td><td class="col-rest">60s</td><td class="col-rpe rpe-mid">8</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">Full ROM = pause at bottom stretch, squeeze at top.</td></tr>
+      <tr><td class="col-weight">110 kg</td><td class="col-reps">8–15</td><td class="col-rest">60s</td><td class="col-rpe rpe-high">8–9</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">PLATEAU TIP: Try "1.5 reps" technique.</td></tr>
+      <tr><td class="col-weight">110 kg</td><td class="col-reps">8–15</td><td class="col-rest">60s</td><td class="col-rpe rpe-high">9</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">When 15-15-15, go to 115. Never bounce.</td></tr>
+    </tbody></table></div>
+  </div></div>
+
+  <div class="exercise"><div class="exercise-head" onclick="toggleExercise(this)"><span class="ex-num">7</span><span class="ex-name">Captain's Chair Straight Leg Raise</span><span class="ex-toggle">▼</span></div><div class="exercise-body">
+    <div class="research-note">REP RANGE: 10–20 · Abs = high slow-twitch%, respond to volume and time under tension. Control tempo to adjust difficulty. RP recommends 10–20 for direct ab work. Use captain's chair — at 91 kg grip fails before abs on bar hang.</div>
+    <div class="table-scroll"><table class="set-table"><thead><tr><th>Weight</th><th>Reps</th><th>Rest</th><th>RPE</th><th>Type</th><th>Notes</th></tr></thead><tbody>
+      <tr><td class="col-weight">BW</td><td class="col-reps">10–20</td><td class="col-rest">60s</td><td class="col-rpe rpe-mid">8</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">SLOW: 3s up, 2s hold, 3s down. No swinging.</td></tr>
+      <tr><td class="col-weight">BW</td><td class="col-reps">10–20</td><td class="col-rest">60s</td><td class="col-rpe rpe-high">8–9</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">If &gt;20 reps with slow tempo, hold DB between feet.</td></tr>
+      <tr><td class="col-weight">BW</td><td class="col-reps">10–20</td><td class="col-rest">60s</td><td class="col-rpe rpe-high">9</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">Focus on posterior pelvic tilt at top.</td></tr>
+    </tbody></table></div>
+  </div></div>
+
+  <div class="volume-audit"><strong>Volume Audit — Lower A:</strong> Quads 8 (squat 3 + hack 3 + ext 2) · Hams 3 · Glutes 3 · Calves 3 · Core 3 · <strong>Total = 20 working sets</strong></div>
+
+  <div class="protocol-block"><div class="protocol-header protocol-cool" onclick="toggleProtocol(this)">Post-Workout Static Stretching <span class="chevron">▼</span></div><div class="protocol-body"><ol>
+    <li>Standing quad stretch — 45s/side</li>
+    <li>Standing hamstring stretch foot on bench — 45s/side</li>
+    <li>Pigeon pose or figure-4 — 45s/side (glutes, anterior pelvic tilt)</li>
+    <li>Kneeling hip flexor stretch — 45s/side</li>
+    <li>Standing calf stretch wall — 30s/side</li>
+    <li>Child's pose — 45s (lower back decompression)</li>
+  </ol></div></div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ UPPER B ═══════════════════════════════════════════════════ -->
+<section class="day-section" id="upper-b">
+  <div class="day-header">
+    <div class="day-label">Thursday</div>
+    <div class="day-title">Upper B <span>— Hypertrophy Focus</span></div>
+  </div>
+
+  <div class="protocol-block"><div class="protocol-header protocol-warm" onclick="toggleProtocol(this)">Pre-Workout Dynamic Warm-Up <span class="chevron">▼</span></div><div class="protocol-body"><ol>
+    <li>Brisk walk / incline treadmill — 3 min</li>
+    <li>Band pull-aparts — 15 reps (scapular activation)</li>
+    <li>Band face pulls — 12 reps (rotator cuff)</li>
+    <li>Arm circles + shoulder dislocations — 10 each</li>
+    <li>Light overhead press — 8 reps at 25 kg (groove pattern)</li>
+  </ol></div></div>
+
+  <div class="exercise open"><div class="exercise-head" onclick="toggleExercise(this)"><span class="ex-num">1</span><span class="ex-name">Lever Seated Shoulder Press</span><span class="ex-toggle">▼</span></div><div class="exercise-body">
+    <div class="research-note">REP RANGE: 6–8 · Heavy anchor for shoulders. This is your shoulder strength day. 6–8 gives strength signal. Machine = safe for lower reps than free-weight OH press.</div>
+    <div class="table-scroll"><table class="set-table"><thead><tr><th>Weight</th><th>Reps</th><th>Rest</th><th>RPE</th><th>Type</th><th>Notes</th></tr></thead><tbody>
+      <tr><td class="col-weight">25 kg</td><td class="col-reps">8</td><td class="col-rest">60s</td><td class="col-rpe">—</td><td><span class="badge badge-warmup">Warmup</span></td><td class="col-notes">Warmup</td></tr>
+      <tr><td class="col-weight">60 kg</td><td class="col-reps">6–8</td><td class="col-rest">2.5 min</td><td class="col-rpe rpe-low">7–8</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">If 60 feels impossible, fall back to 55.</td></tr>
+      <tr><td class="col-weight">60 kg</td><td class="col-reps">6–8</td><td class="col-rest">2.5 min</td><td class="col-rpe rpe-mid">8</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">RPE 8 = 2 RIR.</td></tr>
+      <tr><td class="col-weight">60 kg</td><td class="col-reps">6–8</td><td class="col-rest">2.5 min</td><td class="col-rpe rpe-high">8–9</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">When 8-8-8, go to 62.5 or 65 kg.</td></tr>
+    </tbody></table></div>
+  </div></div>
+
+  <div class="exercise"><div class="exercise-head" onclick="toggleExercise(this)"><span class="ex-num">2</span><span class="ex-name">Lever Lying T-bar Row</span><span class="ex-toggle">▼</span></div><div class="exercise-body">
+    <div class="research-note">REP RANGE: 8–12 · Chest-supported row = different angle than cable row. Removes momentum/cheating. Chest support means you can focus purely on back contraction.</div>
+    <div class="table-scroll"><table class="set-table"><thead><tr><th>Weight</th><th>Reps</th><th>Rest</th><th>RPE</th><th>Type</th><th>Notes</th></tr></thead><tbody>
+      <tr><td class="col-weight">20 kg</td><td class="col-reps">8</td><td class="col-rest">60s</td><td class="col-rpe">—</td><td><span class="badge badge-warmup">Warmup</span></td><td class="col-notes">Light, feel the back</td></tr>
+      <tr><td class="col-weight">50 kg</td><td class="col-reps">8–12</td><td class="col-rest">90s</td><td class="col-rpe rpe-low">7–8</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">Start 50, progress fast.</td></tr>
+      <tr><td class="col-weight">50 kg</td><td class="col-reps">8–12</td><td class="col-rest">90s</td><td class="col-rpe rpe-mid">8</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">Squeeze scapulae at top, full stretch at bottom.</td></tr>
+      <tr><td class="col-weight">50 kg</td><td class="col-reps">8–12</td><td class="col-rest">90s</td><td class="col-rpe rpe-high">8–9</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">When 12-12-12, go to 55 kg.</td></tr>
+    </tbody></table></div>
+  </div></div>
+
+  <div class="exercise"><div class="exercise-head" onclick="toggleExercise(this)"><span class="ex-num">3</span><span class="ex-name">Lever Lying Chest Press</span><span class="ex-toggle">▼</span></div><div class="exercise-body">
+    <div class="research-note">REP RANGE: 8–12 · Machine press, hypertrophy day. This is day 2 for chest — higher reps for metabolic stress and volume accumulation.</div>
+    <div class="table-scroll"><table class="set-table"><thead><tr><th>Weight</th><th>Reps</th><th>Rest</th><th>RPE</th><th>Type</th><th>Notes</th></tr></thead><tbody>
+      <tr><td class="col-weight">40 kg</td><td class="col-reps">7</td><td class="col-rest">60s</td><td class="col-rpe">—</td><td><span class="badge badge-warmup">Warmup</span></td><td class="col-notes">Warmup</td></tr>
+      <tr><td class="col-weight">80 kg</td><td class="col-reps">8–12</td><td class="col-rest">90s</td><td class="col-rpe rpe-low">7–8</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">80 kg at RPE 8.</td></tr>
+      <tr><td class="col-weight">80 kg</td><td class="col-reps">8–12</td><td class="col-rest">90s</td><td class="col-rpe rpe-mid">8</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">Controlled tempo, stretch at bottom.</td></tr>
+      <tr><td class="col-weight">80 kg</td><td class="col-reps">8–12</td><td class="col-rest">90s</td><td class="col-rpe rpe-high">8–9</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">When 12-12-12, go to 85 kg.</td></tr>
+    </tbody></table></div>
+  </div></div>
+
+  <div class="exercise"><div class="exercise-head" onclick="toggleExercise(this)"><span class="ex-num">4</span><span class="ex-name">Straight Arm Pulldown</span><span class="ex-toggle">▼</span></div><div class="exercise-body">
+    <div class="research-note">REP RANGE: 12–15 · Pure lat isolation, single-joint at shoulder. Low injury risk. Higher reps = more time under tension for lats without grip being the limiter.</div>
+    <div class="table-scroll"><table class="set-table"><thead><tr><th>Weight</th><th>Reps</th><th>Rest</th><th>RPE</th><th>Type</th><th>Notes</th></tr></thead><tbody>
+      <tr><td class="col-weight">30 kg</td><td class="col-reps">8</td><td class="col-rest">45s</td><td class="col-rpe">—</td><td><span class="badge badge-warmup">Warmup</span></td><td class="col-notes">Feel lats</td></tr>
+      <tr><td class="col-weight">50 kg</td><td class="col-reps">12–15</td><td class="col-rest">60s</td><td class="col-rpe rpe-high">8–9</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">Right in range.</td></tr>
+      <tr><td class="col-weight">50 kg</td><td class="col-reps">12–15</td><td class="col-rest">60s</td><td class="col-rpe rpe-max">9–10</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">Last set push to failure. Straight arms, squeeze lats at bottom.</td></tr>
+    </tbody></table></div>
+  </div></div>
+
+  <div class="exercise"><div class="exercise-head" onclick="toggleExercise(this)"><span class="ex-num">5</span><span class="ex-name">Cable Rear Delt Fly</span><span class="ex-toggle">▼</span></div><div class="exercise-body">
+    <div class="research-note">REP RANGE: 15–25 · Rear delts are small, slow-twitch dominant. Heavy rear delt work just recruits traps. High reps + strict form = rear delt growth.</div>
+    <div class="table-scroll"><table class="set-table"><thead><tr><th>Weight</th><th>Reps</th><th>Rest</th><th>RPE</th><th>Type</th><th>Notes</th></tr></thead><tbody>
+      <tr><td class="col-weight">20 kg</td><td class="col-reps">8</td><td class="col-rest">45s</td><td class="col-rpe rpe-low">4–5</td><td><span class="badge badge-feeler">Feeler</span></td><td class="col-notes">Rear delt activation</td></tr>
+      <tr><td class="col-weight">35 kg</td><td class="col-reps">15–25</td><td class="col-rest">60s</td><td class="col-rpe rpe-mid">8</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">Set 1 is a genuine working set. 35 kg lets you push to 20+.</td></tr>
+      <tr><td class="col-weight">35 kg</td><td class="col-reps">15–25</td><td class="col-rest">60s</td><td class="col-rpe rpe-high">9</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">Controlled reps, strict form. No trap recruitment.</td></tr>
+      <tr><td class="col-weight">35 kg</td><td class="col-reps">15–25</td><td class="col-rest">60s</td><td class="col-rpe rpe-max">9–10</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">Last set push close to failure. Safe on rear delt isolation.</td></tr>
+    </tbody></table></div>
+  </div></div>
+
+  <div class="exercise"><div class="exercise-head" onclick="toggleExercise(this)"><span class="ex-num">6</span><span class="ex-name">Cable Standing Fly</span><span class="ex-toggle">▼</span></div><div class="exercise-body">
+    <div class="research-note">REP RANGE: 10–15 · Chest isolation. Cables = constant tension. 10–15 for flys — too heavy and you turn it into a pressing motion. Focus on stretch + squeeze.</div>
+    <div class="table-scroll"><table class="set-table"><thead><tr><th>Weight</th><th>Reps</th><th>Rest</th><th>RPE</th><th>Type</th><th>Notes</th></tr></thead><tbody>
+      <tr><td class="col-weight">30 kg</td><td class="col-reps">8</td><td class="col-rest">45s</td><td class="col-rpe rpe-low">4–5</td><td><span class="badge badge-feeler">Feeler</span></td><td class="col-notes">Feel pec stretch</td></tr>
+      <tr><td class="col-weight">50 kg</td><td class="col-reps">10–15</td><td class="col-rest">60s</td><td class="col-rpe rpe-high">8–9</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">Focus on pec squeeze.</td></tr>
+      <tr><td class="col-weight">50 kg</td><td class="col-reps">10–15</td><td class="col-rest">60s</td><td class="col-rpe rpe-max">9–10</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">Last set close to failure. Squeeze at peak, stretch at bottom.</td></tr>
+    </tbody></table></div>
+  </div></div>
+
+  <div class="exercise"><div class="exercise-head" onclick="toggleExercise(this)"><span class="ex-num">7</span><span class="ex-name">Cable Leaning Lateral Raise</span><span class="ex-toggle">▼</span></div><div class="exercise-body">
+    <div class="research-note">REP RANGE: 12–20 · Side delts trained on both upper days for frequency. Cable = constant tension, high reps keep traps out. Lighter than Upper A — fatigue is higher this late in session.</div>
+    <div class="table-scroll"><table class="set-table"><thead><tr><th>Weight</th><th>Reps</th><th>Rest</th><th>RPE</th><th>Type</th><th>Notes</th></tr></thead><tbody>
+      <tr><td class="col-weight">10 kg</td><td class="col-reps">8</td><td class="col-rest">45s</td><td class="col-rpe rpe-low">4–5</td><td><span class="badge badge-feeler">Feeler</span></td><td class="col-notes">Warm shoulder in this pattern</td></tr>
+      <tr><td class="col-weight">25 kg</td><td class="col-reps">12–20</td><td class="col-rest">60s</td><td class="col-rpe rpe-high">8–9</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">Start lighter than Upper A (25 vs 30) — late in session.</td></tr>
+      <tr><td class="col-weight">25 kg</td><td class="col-reps">12–20</td><td class="col-rest">60s</td><td class="col-rpe rpe-max">9–10</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">Last set to failure. When 20-20, go to 27.5 or 30.</td></tr>
+    </tbody></table></div>
+  </div></div>
+
+  <div class="exercise"><div class="exercise-head" onclick="toggleExercise(this)"><span class="ex-num">8</span><span class="ex-name">Overhead Triceps Extension</span><span class="ex-superset">⟵ SS #9</span><span class="ex-toggle">▼</span></div><div class="exercise-body">
+    <div class="research-note">REP RANGE: 10–15 · OH position = tricep long head at stretched length (Maeo 2023: OH extension > pushdown for long head growth). 10–15 because going heavy irritates elbows.</div>
+    <div class="table-scroll"><table class="set-table"><thead><tr><th>Weight</th><th>Reps</th><th>Rest</th><th>RPE</th><th>Type</th><th>Notes</th></tr></thead><tbody>
+      <tr><td class="col-weight">30 kg</td><td class="col-reps">8</td><td class="col-rest">45s</td><td class="col-rpe rpe-low">4–5</td><td><span class="badge badge-feeler">Feeler</span></td><td class="col-notes">Critical for elbows. Never go cold into OH extensions.</td></tr>
+      <tr><td class="col-weight">60 kg</td><td class="col-reps">10–15</td><td class="col-rest">0s → curl</td><td class="col-rpe rpe-high">8–9</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">60 kg at 10–15 with proper RPE.</td></tr>
+      <tr><td class="col-weight">60 kg</td><td class="col-reps">10–15</td><td class="col-rest">0s → curl</td><td class="col-rpe rpe-max">9–10</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">Last set push hard. Then curls.</td></tr>
+    </tbody></table></div>
+  </div></div>
+
+  <div class="exercise"><div class="exercise-head" onclick="toggleExercise(this)"><span class="ex-num">9</span><span class="ex-name">EZ Bar Curl or Hammer Curl</span><span class="ex-superset">⟵ SS #8</span><span class="ex-toggle">▼</span></div><div class="exercise-body">
+    <div class="research-note">REP RANGE: 8–12 · Different curl variation from Upper A (incline = stretched, EZ/hammer = neutral/shortened). Variety prevents repetitive strain.</div>
+    <div class="table-scroll"><table class="set-table"><thead><tr><th>Weight</th><th>Reps</th><th>Rest</th><th>RPE</th><th>Type</th><th>Notes</th></tr></thead><tbody>
+      <tr><td class="col-weight">25 kg</td><td class="col-reps">8–12</td><td class="col-rest">90s → #8</td><td class="col-rpe rpe-high">8–9</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">EZ curl ~25 kg. Hammer ~15 kg/hand.</td></tr>
+      <tr><td class="col-weight">25 kg</td><td class="col-reps">8–12</td><td class="col-rest">90s → #8</td><td class="col-rpe rpe-max">9–10</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">Last set close to failure. 90s rest then back to OH extension.</td></tr>
+    </tbody></table></div>
+  </div></div>
+
+  <div class="volume-audit"><strong>Volume Audit — Upper B:</strong> Chest 5 (press 3 + fly 2) · Back 5 (T-bar 3 + pulldown 2) · Shoulders (press) 3 · Shoulders (side) 2 · Shoulders (rear) 3 · Triceps 2 · Biceps 2 · <strong>Total = 22 working sets</strong></div>
+
+  <div class="protocol-block"><div class="protocol-header protocol-cool" onclick="toggleProtocol(this)">Post-Workout Static Stretching <span class="chevron">▼</span></div><div class="protocol-body"><ol>
+    <li>Doorway chest stretch — 45s/side</li>
+    <li>Dead hang from bar — 30–45s (lats, spine decompression)</li>
+    <li>Cross-body shoulder stretch — 30s/side</li>
+    <li>Overhead triceps stretch — 30s/side</li>
+    <li>Wrist flexor/extensor stretch — 20s each</li>
+  </ol></div></div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ LOWER B ═══════════════════════════════════════════════════ -->
+<section class="day-section" id="lower-b">
+  <div class="day-header">
+    <div class="day-label">Friday</div>
+    <div class="day-title">Lower B <span>— Hypertrophy Focus</span></div>
+  </div>
+
+  <div class="protocol-block"><div class="protocol-header protocol-warm" onclick="toggleProtocol(this)">Pre-Workout Dynamic Warm-Up <span class="chevron">▼</span></div><div class="protocol-body"><ol>
+    <li>Brisk walk / incline treadmill — 3 min</li>
+    <li>Bodyweight squats — 10 reps</li>
+    <li>Banded lateral walks — 10/side (glute medius activation)</li>
+    <li>Single-leg RDL bodyweight — 6/leg (hamstring activation)</li>
+    <li>Leg swings front-back — 10/leg</li>
+    <li>Ankle circles + calf pumps — 10 each (ankle mobility for leg press)</li>
+  </ol></div></div>
+
+  <div class="exercise open"><div class="exercise-head" onclick="toggleExercise(this)"><span class="ex-num">1</span><span class="ex-name">Sled 45° Leg Press</span><span class="ex-toggle">▼</span></div><div class="exercise-body">
+    <div class="research-note">REP RANGE: 8–12 · Machine compound, no spinal load. Allows heavy quad work safely. Going too light (15+) = cardiovascular failure before quad failure.</div>
+    <div class="table-scroll"><table class="set-table"><thead><tr><th>Weight</th><th>Reps</th><th>Rest</th><th>RPE</th><th>Type</th><th>Notes</th></tr></thead><tbody>
+      <tr><td class="col-weight">120 kg</td><td class="col-reps">8</td><td class="col-rest">60s</td><td class="col-rpe">—</td><td><span class="badge badge-warmup">Warmup</span></td><td class="col-notes">Warmup</td></tr>
+      <tr><td class="col-weight">275 kg</td><td class="col-reps">8–12</td><td class="col-rest">2.5 min</td><td class="col-rpe rpe-low">7–8</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">Full depth, knees track toes.</td></tr>
+      <tr><td class="col-weight">275 kg</td><td class="col-reps">8–12</td><td class="col-rest">2.5 min</td><td class="col-rpe rpe-mid">8</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">RPE 8.</td></tr>
+      <tr><td class="col-weight">275 kg</td><td class="col-reps">8–12</td><td class="col-rest">2.5 min</td><td class="col-rpe rpe-high">8–9</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">When 12-12-12, go to 285. Never lock knees at top.</td></tr>
+    </tbody></table></div>
+  </div></div>
+
+  <div class="exercise"><div class="exercise-head" onclick="toggleExercise(this)"><span class="ex-num">2</span><span class="ex-name">Romanian Deadlift</span><span class="ex-toggle">▼</span></div><div class="exercise-body">
+    <div class="research-note">REP RANGE: 6–8 · Heavy hip hinge, high spinal load. Placed after leg press because spine is FRESH (zero spinal load). 6–8 maximizes hamstring tension at stretched position.</div>
+    <div class="table-scroll"><table class="set-table"><thead><tr><th>Weight</th><th>Reps</th><th>Rest</th><th>RPE</th><th>Type</th><th>Notes</th></tr></thead><tbody>
+      <tr><td class="col-weight">60 kg</td><td class="col-reps">6</td><td class="col-rest">60s</td><td class="col-rpe">—</td><td><span class="badge badge-warmup">Warmup</span></td><td class="col-notes">Hinge pattern, feel hamstring stretch</td></tr>
+      <tr><td class="col-weight">120 kg</td><td class="col-reps">6–8</td><td class="col-rest">2.5 min</td><td class="col-rpe rpe-low">7</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">Spine fresh from leg press.</td></tr>
+      <tr><td class="col-weight">120 kg</td><td class="col-reps">6–8</td><td class="col-rest">2.5 min</td><td class="col-rpe rpe-low">7–8</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">Stretch hamstrings at bottom, squeeze glutes at top.</td></tr>
+      <tr><td class="col-weight">120 kg</td><td class="col-reps">6–8</td><td class="col-rest">2.5 min</td><td class="col-rpe rpe-mid">8</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">2 RIR. NEVER grind RDLs. When 8-8-8, go to 125.</td></tr>
+    </tbody></table></div>
+  </div></div>
+
+  <div class="exercise"><div class="exercise-head" onclick="toggleExercise(this)"><span class="ex-num">3</span><span class="ex-name">Lever Lying Leg Curl</span><span class="ex-toggle">▼</span></div><div class="exercise-body">
+    <div class="research-note">REP RANGE: 8–12 · Prone/lying curl = hip extended = shorter hamstring length. Provides variety alongside seated curl on Lower A. RDL above covers stretched position.</div>
+    <div class="table-scroll"><table class="set-table"><thead><tr><th>Weight</th><th>Reps</th><th>Rest</th><th>RPE</th><th>Type</th><th>Notes</th></tr></thead><tbody>
+      <tr><td class="col-weight">30 kg</td><td class="col-reps">8</td><td class="col-rest">45s</td><td class="col-rpe">—</td><td><span class="badge badge-warmup">Warmup</span></td><td class="col-notes">Warm hamstrings</td></tr>
+      <tr><td class="col-weight">60 kg</td><td class="col-reps">8–12</td><td class="col-rest">60s</td><td class="col-rpe rpe-high">8–9</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">Fast concentric, 3s eccentric.</td></tr>
+      <tr><td class="col-weight">60 kg</td><td class="col-reps">8–12</td><td class="col-rest">60s</td><td class="col-rpe rpe-high">8–9</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">When 12-12-12, go to 65.</td></tr>
+      <tr><td class="col-weight">60 kg</td><td class="col-reps">8–12</td><td class="col-rest">60s</td><td class="col-rpe rpe-max">9–10</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">Last set to failure. 3-sec eccentrics + pause at stretched position.</td></tr>
+    </tbody></table></div>
+  </div></div>
+
+  <div class="exercise"><div class="exercise-head" onclick="toggleExercise(this)"><span class="ex-num">4</span><span class="ex-name">Smith Hip Thrust</span><span class="ex-toggle">▼</span></div><div class="exercise-body">
+    <div class="research-note">REP RANGE: 10–15 · Glute isolation. Glutes are large, mixed-fiber. Full lockout at top = peak contraction. Going too heavy = lumbar hyperextension.</div>
+    <div class="table-scroll"><table class="set-table"><thead><tr><th>Weight</th><th>Reps</th><th>Rest</th><th>RPE</th><th>Type</th><th>Notes</th></tr></thead><tbody>
+      <tr><td class="col-weight">80 kg</td><td class="col-reps">8</td><td class="col-rest">60s</td><td class="col-rpe">—</td><td><span class="badge badge-warmup">Warmup</span></td><td class="col-notes">Feel glutes, full lockout</td></tr>
+      <tr><td class="col-weight">120 kg</td><td class="col-reps">10–15</td><td class="col-rest">90s</td><td class="col-rpe rpe-low">7–8</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">Progressive start: 120 week 1–2.</td></tr>
+      <tr><td class="col-weight">120 kg</td><td class="col-reps">10–15</td><td class="col-rest">90s</td><td class="col-rpe rpe-mid">8</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">Full hip extension, 1s squeeze at top. Drive through heels.</td></tr>
+      <tr><td class="col-weight">120 kg</td><td class="col-reps">10–15</td><td class="col-rest">90s</td><td class="col-rpe rpe-high">8–9</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">When 15-15-15, go to 130. Then 140 by week 5.</td></tr>
+    </tbody></table></div>
+  </div></div>
+
+  <div class="exercise"><div class="exercise-head" onclick="toggleExercise(this)"><span class="ex-num">5</span><span class="ex-name">Lever Seated Calf Raise</span><span class="ex-toggle">▼</span></div><div class="exercise-body">
+    <div class="research-note">REP RANGE: 15–20 · Seated = knee flexed = targets SOLEUS. Soleus is &gt;80% slow-twitch. Higher reps + time under tension optimal. Standing calf on Lower A covers gastrocnemius.</div>
+    <div class="table-scroll"><table class="set-table"><thead><tr><th>Weight</th><th>Reps</th><th>Rest</th><th>RPE</th><th>Type</th><th>Notes</th></tr></thead><tbody>
+      <tr><td class="col-weight">35 kg</td><td class="col-reps">8</td><td class="col-rest">45s</td><td class="col-rpe">—</td><td><span class="badge badge-warmup">Warmup</span></td><td class="col-notes">Full ROM stretch</td></tr>
+      <tr><td class="col-weight">45 kg</td><td class="col-reps">15–20</td><td class="col-rest">60s</td><td class="col-rpe rpe-high">8–9</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">Soleus needs SLOW reps, not heavy load.</td></tr>
+      <tr><td class="col-weight">45 kg</td><td class="col-reps">15–20</td><td class="col-rest">60s</td><td class="col-rpe rpe-high">9</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">2s pause at bottom stretch. When 20-20-20, go to 50.</td></tr>
+      <tr><td class="col-weight">45 kg</td><td class="col-reps">15–20</td><td class="col-rest">60s</td><td class="col-rpe rpe-max">9–10</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">Last set to failure. Full ROM &gt; load for calves.</td></tr>
+    </tbody></table></div>
+  </div></div>
+
+  <div class="exercise"><div class="exercise-head" onclick="toggleExercise(this)"><span class="ex-num">6</span><span class="ex-name">Cable Crunch (or Lever Seated Crunch)</span><span class="ex-toggle">▼</span></div><div class="exercise-body">
+    <div class="research-note">REP RANGE: 12–20 · Abs = slow-twitch, respond to volume. Cable crunch = loaded, can progress. Don't pull with arms — crunch through the abs.</div>
+    <div class="table-scroll"><table class="set-table"><thead><tr><th>Weight</th><th>Reps</th><th>Rest</th><th>RPE</th><th>Type</th><th>Notes</th></tr></thead><tbody>
+      <tr><td class="col-weight">40 kg</td><td class="col-reps">12–20</td><td class="col-rest">60s</td><td class="col-rpe rpe-mid">8</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">40 kg lets you hit top of range.</td></tr>
+      <tr><td class="col-weight">40 kg</td><td class="col-reps">12–20</td><td class="col-rest">60s</td><td class="col-rpe rpe-high">8–9</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">Exhale hard on each crunch. Feel abs, not hip flexors.</td></tr>
+      <tr><td class="col-weight">40 kg</td><td class="col-reps">12–20</td><td class="col-rest">60s</td><td class="col-rpe rpe-max">9–10</td><td><span class="badge badge-working">Working</span></td><td class="col-notes">When 20-20-20, go to 45.</td></tr>
+    </tbody></table></div>
+  </div></div>
+
+  <div class="volume-audit"><strong>Volume Audit — Lower B:</strong> Quads 3 (leg press) · Hams 6 (RDL 3 + curl 3) · Glutes 3 · Calves 3 · Core 3 · <strong>Total = 18 working sets</strong></div>
+
+  <div class="protocol-block"><div class="protocol-header protocol-cool" onclick="toggleProtocol(this)">Post-Workout Static Stretching <span class="chevron">▼</span></div><div class="protocol-body"><ol>
+    <li>Standing hamstring stretch — 45s/side (main focus today)</li>
+    <li>Kneeling hip flexor stretch — 45s/side (anterior pelvic tilt fix)</li>
+    <li>Pigeon pose or figure-4 — 45s/side (glutes from hip thrusts)</li>
+    <li>Standing quad stretch — 30s/side</li>
+    <li>Seated calf stretch towel pull — 30s/side (soleus + achilles)</li>
+    <li>Supine spinal twist — 30s/side (lower back decompression after RDL)</li>
+  </ol></div></div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ CARDIO ═══════════════════════════════════════════════════ -->
+<section class="day-section" id="cardio">
+  <div class="day-header">
+    <div class="day-label">Recovery & Conditioning</div>
+    <div class="day-title">Cardio Protocol <span>— LISS Only During Cut</span></div>
+  </div>
+
+  <div class="key-rule" style="margin-top:1.5rem"><strong>WHY LISS, NOT HIIT:</strong> You're training 4 days/week at 18–22 working sets per session in a caloric deficit. Recovery capacity is already reduced. HIIT draws from the same recovery pool as lifting — it creates systemic fatigue, elevates cortisol, depletes glycogen, and taxes the CNS. The caloric burn difference is ~50–80 kcal per session — just eat slightly less instead. LISS burns calories without adding recovery debt.</div>
+
+  <div class="exercise open">
+    <div class="exercise-head" onclick="toggleExercise(this)">
+      <span class="ex-num" style="background:var(--green-bg);color:var(--green);border-color:rgba(52,211,153,0.15)">W</span>
+      <span class="ex-name">Wednesday — Primary Cardio Day</span>
+      <span class="ex-toggle">▼</span>
+    </div>
+    <div class="exercise-body">
+      <div class="research-note">Best cardio day of the week. No training before or after — maximum separation from resistance sessions. Full recovery from Mon/Tue block, full recovery into Thu/Fri block.</div>
+      <div style="padding:1rem 1.25rem">
+        <div style="margin-bottom:1.25rem">
+          <div style="font-weight:700;font-size:0.85rem;color:var(--green);margin-bottom:0.35rem;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.06em">Option A — Walk</div>
+          <div style="font-size:0.85rem;color:var(--text-dim);line-height:1.55">30–45 minutes brisk walk at conversational pace. Heart rate 50–65% of max. Evening when it cools down is ideal. Burns ~200–270 kcal at 91 kg.</div>
+        </div>
+        <div style="margin-bottom:1.25rem">
+          <div style="font-weight:700;font-size:0.85rem;color:var(--green);margin-bottom:0.35rem;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.06em">Option B — Swim</div>
+          <div style="font-size:0.85rem;color:var(--text-dim);line-height:1.55">20–30 minutes at moderate pace. Keep it easy — swimming taxes lats, shoulders, and triceps more than people assume. Don't turn it into a workout. Pick either walk or swim, not both.</div>
+        </div>
+        <div>
+          <div style="font-weight:700;font-size:0.85rem;color:var(--blue);margin-bottom:0.35rem;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.06em">+ Mobility Work</div>
+          <div style="font-size:0.85rem;color:var(--text-dim);line-height:1.55">10–15 minutes of stretching. Focus on hip flexor stretches, thoracic spine rotations, and pigeon pose. This directly improves squat depth and overhead press position for Thursday/Friday.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="exercise open">
+    <div class="exercise-head" onclick="toggleExercise(this)">
+      <span class="ex-num" style="background:var(--green-bg);color:var(--green);border-color:rgba(52,211,153,0.15)">S</span>
+      <span class="ex-name">Saturday — Second Cardio Day</span>
+      <span class="ex-toggle">▼</span>
+    </div>
+    <div class="exercise-body">
+      <div class="research-note">Second-best cardio day. Maximum separation from training. Same options as Wednesday. If you swim, avoid hammering shoulders the day before Upper A on Monday.</div>
+      <div style="padding:1rem 1.25rem">
+        <div style="margin-bottom:1.25rem">
+          <div style="font-weight:700;font-size:0.85rem;color:var(--green);margin-bottom:0.35rem;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.06em">Walk or Swim</div>
+          <div style="font-size:0.85rem;color:var(--text-dim);line-height:1.55">30–40 minutes walk or 20–30 minutes moderate swim. Same rules as Wednesday. If you swam Wednesday, walk Saturday (or vice versa) to avoid repetitive shoulder stress before Monday's upper session.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="exercise open">
+    <div class="exercise-head" onclick="toggleExercise(this)">
+      <span class="ex-num" style="background:var(--purple-bg);color:var(--purple);border-color:rgba(167,139,250,0.15)">+</span>
+      <span class="ex-name">Training Days — Bonus (Not Required)</span>
+      <span class="ex-toggle">▼</span>
+    </div>
+    <div class="exercise-body">
+      <div class="research-note">Petré et al. 2021: spacing cardio at least 6–8 hours from resistance training minimizes interference. Post-workout cardio can impair mTOR signaling, which is already suppressed by the deficit (Areta et al. 2014). Separate sessions are better than post-workout if you can manage it.</div>
+      <div style="padding:1rem 1.25rem">
+        <div style="margin-bottom:1.25rem">
+          <div style="font-weight:700;font-size:0.85rem;color:var(--purple);margin-bottom:0.35rem;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.06em">If you can fit it in</div>
+          <div style="font-size:0.85rem;color:var(--text-dim);line-height:1.55">15–20 minute walk at any point during the day, separate from your gym session. Morning, lunch break, evening — doesn't matter. If some days you can't, skip it. The resistance training is the priority. This is a bonus, not a requirement.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="exercise">
+    <div class="exercise-head" onclick="toggleExercise(this)">
+      <span class="ex-num" style="background:var(--blue-bg);color:var(--blue);border-color:rgba(96,165,250,0.15)">☀</span>
+      <span class="ex-name">Sunday — Full Rest</span>
+      <span class="ex-toggle">▼</span>
+    </div>
+    <div class="exercise-body">
+      <div style="padding:1rem 1.25rem">
+        <div style="font-size:0.85rem;color:var(--text-dim);line-height:1.55">Genuine rest. A short walk is fine if you feel like it, but this is the day before a training week starts. Sleep well, eat your protein, recover. Don't add stress.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="volume-audit" style="margin-top:1.75rem">
+    <strong>Weekly Cardio Target:</strong> 2 dedicated LISS sessions (Wed + Sat) · 30–40 min each · ~500–700 kcal/week additional expenditure · Zero recovery interference<br><br>
+    <strong>Research:</strong> Schoenfeld 2014 — no fat-loss advantage to fasted cardio · Wilson 2012 — LISS minimizes interference · Helms — avoid HIIT during deficit for natural trainees · Henselmans — LISS preserves muscle better than HIIT in caloric restriction
+  </div>
+
+  <!-- ── DAILY STEPS ── -->
+  <div style="margin-top:2.5rem;padding-bottom:0.5rem;border-bottom:1px solid var(--border)">
+    <div class="day-label">Daily Target</div>
+    <div class="day-title" style="font-size:1.3rem">Step Count</div>
+  </div>
+
+  <div class="exercise open">
+    <div class="exercise-head" onclick="toggleExercise(this)">
+      <span class="ex-num" style="background:var(--green-bg);color:var(--green);border-color:rgba(52,211,153,0.15)">👟</span>
+      <span class="ex-name">8,000–10,000 Steps / Day</span>
+      <span class="ex-toggle">▼</span>
+    </div>
+    <div class="exercise-body">
+      <div class="research-note">Paluch et al. 2022 (JAMA Internal Medicine): 8,000 steps/day associated with significant reduction in all-cause mortality. Benefits plateau around 10,000–12,000. For someone in a deficit, steps are the easiest way to increase NEAT (Non-Exercise Activity Thermogenesis) without structured cardio.</div>
+      <div style="padding:1rem 1.25rem">
+        <div style="margin-bottom:1.25rem">
+          <div style="font-weight:700;font-size:0.85rem;color:var(--green);margin-bottom:0.35rem;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.06em">How to hit it with a desk job</div>
+          <div style="font-size:0.85rem;color:var(--text-dim);line-height:1.55">
+            A typical office worker gets 3,000–4,000 steps passively. You need to deliberately add 4,000–6,000 more. That's roughly 30–45 minutes of total walking broken up throughout the day — not a single long walk.
+          </div>
+        </div>
+        <div style="margin-bottom:1.25rem">
+          <div style="font-weight:700;font-size:0.85rem;color:var(--amber);margin-bottom:0.35rem;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.06em">Realistic breakdown</div>
+          <div style="font-size:0.85rem;color:var(--text-dim);line-height:1.7">
+            <span style="color:var(--text);font-weight:600">Morning:</span> 10-min walk before work or after parking (~1,200 steps)<br>
+            <span style="color:var(--text);font-weight:600">Lunch:</span> 15-min walk after eating (~1,800 steps)<br>
+            <span style="color:var(--text);font-weight:600">Evening:</span> 15-min walk post-dinner (~1,800 steps)<br>
+            <span style="color:var(--text);font-weight:600">Throughout day:</span> Take calls standing/walking, use stairs, walk to refill water (~1,000 steps)
+          </div>
+        </div>
+        <div>
+          <div style="font-weight:700;font-size:0.85rem;color:var(--text-muted);margin-bottom:0.35rem;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.06em">Training day steps</div>
+          <div style="font-size:0.85rem;color:var(--text-dim);line-height:1.55">Your gym session itself adds ~2,000–3,000 steps. So on training days you need less deliberate walking. On rest days (Wed/Sun), you need to be more intentional since you lose that baseline.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SEDENTARY OFFICE TIPS ── -->
+  <div class="exercise open">
+    <div class="exercise-head" onclick="toggleExercise(this)">
+      <span class="ex-num" style="background:var(--blue-bg);color:var(--blue);border-color:rgba(96,165,250,0.15)">💺</span>
+      <span class="ex-name">Beating the Desk — Sedentary Office Tips</span>
+      <span class="ex-toggle">▼</span>
+    </div>
+    <div class="exercise-body">
+      <div class="research-note">Prolonged sitting reduces insulin sensitivity, compresses hip flexors (already flagged as tight), inhibits glute activation, and drops NEAT significantly. Diaz et al. 2017 (Annals of Internal Medicine): sitting bouts &gt;60 minutes continuously are associated with higher mortality regardless of total exercise.</div>
+      <div style="padding:1rem 1.25rem">
+        <div style="margin-bottom:1.25rem">
+          <div style="font-weight:700;font-size:0.85rem;color:var(--blue);margin-bottom:0.5rem;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.06em">The 30/30 rule</div>
+          <div style="font-size:0.85rem;color:var(--text-dim);line-height:1.55">Every 30 minutes, stand for 30 seconds. Set a phone timer or use an app. Just standing and sitting back down breaks the continuous sitting pattern. This alone improves insulin sensitivity and blood glucose response (Dempsey et al. 2016).</div>
+        </div>
+        <div style="margin-bottom:1.25rem">
+          <div style="font-weight:700;font-size:0.85rem;color:var(--blue);margin-bottom:0.5rem;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.06em">Micro-movement breaks (every 60 min)</div>
+          <div style="font-size:0.85rem;color:var(--text-dim);line-height:1.7">
+            <span style="color:var(--text);font-weight:600">Standing hip flexor stretch</span> — 20s/side. Your hip flexors are locked short for 8 hours. This directly affects squat depth and hip thrust lockout.<br>
+            <span style="color:var(--text);font-weight:600">Thoracic extension over chair back</span> — 10s. Counters the forward hunch. Improves overhead press position.<br>
+            <span style="color:var(--text);font-weight:600">Glute squeeze</span> — 10 reps standing. Reactivates glutes that go dormant from sitting (gluteal amnesia).<br>
+            <span style="color:var(--text);font-weight:600">Walk to refill water</span> — keeps you hydrated and adds steps.
+          </div>
+        </div>
+        <div style="margin-bottom:1.25rem">
+          <div style="font-weight:700;font-size:0.85rem;color:var(--blue);margin-bottom:0.5rem;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.06em">Posture setup</div>
+          <div style="font-size:0.85rem;color:var(--text-dim);line-height:1.55">Monitor at eye level. Elbows at 90°. Feet flat on floor. If you can, alternate between sitting and standing (even stacking books under your laptop counts). Your rear delt and face pull work in the gym is partially fixing posture problems that 8 hours of desk work creates daily — don't undo it by slouching all day.</div>
+        </div>
+        <div>
+          <div style="font-weight:700;font-size:0.85rem;color:var(--blue);margin-bottom:0.5rem;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.06em">Water intake</div>
+          <div style="font-size:0.85rem;color:var(--text-dim);line-height:1.55">3–4 litres/day. Use a 1L bottle and refill it. This forces bathroom breaks which force you to stand and walk. Hydration also supports training performance and reduces false hunger signals during a deficit.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── NUTRITION ── -->
+  <div style="margin-top:2.5rem;padding-bottom:0.5rem;border-bottom:1px solid var(--border)">
+    <div class="day-label">Nutrition Targets</div>
+    <div class="day-title" style="font-size:1.3rem">Protein & Calorie Intake</div>
+  </div>
+
+  <div class="exercise open">
+    <div class="exercise-head" onclick="toggleExercise(this)">
+      <span class="ex-num" style="background:var(--orange-bg);color:var(--orange);border-color:rgba(251,146,60,0.15)">P</span>
+      <span class="ex-name">Protein — 180–200g / Day</span>
+      <span class="ex-toggle">▼</span>
+    </div>
+    <div class="exercise-body">
+      <div class="research-note">Helms et al. 2014 meta-analysis: resistance-trained athletes in a deficit need 2.3–3.1 g/kg of fat-free mass. At ~91 kg with an estimated 18–22% body fat, fat-free mass ≈ 71–75 kg → 163–232g range. Practically, 180–200g/day covers the sweet spot without needing precise body fat measurement.</div>
+      <div style="padding:1rem 1.25rem">
+        <div style="margin-bottom:1.25rem">
+          <div style="font-weight:700;font-size:0.85rem;color:var(--orange);margin-bottom:0.35rem;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.06em">Why this high</div>
+          <div style="font-size:0.85rem;color:var(--text-dim);line-height:1.55">In a deficit, muscle protein breakdown increases. Higher protein intake offsets this by keeping muscle protein synthesis elevated. Phillips & Van Loon 2011: protein requirements increase as caloric deficit deepens. You're doing heavy compound work (145 kg squats, 120 kg RDLs) — the muscle damage from that training requires amino acids for repair. Skimping on protein in a deficit is the fastest way to lose muscle.</div>
+        </div>
+        <div style="margin-bottom:1.25rem">
+          <div style="font-weight:700;font-size:0.85rem;color:var(--orange);margin-bottom:0.35rem;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.06em">Distribution</div>
+          <div style="font-size:0.85rem;color:var(--text-dim);line-height:1.7">
+            <span style="color:var(--text);font-weight:600">4 meals × 40–50g protein each.</span> Schoenfeld & Aragon 2018: distributing protein across 4+ feedings maximizes 24-hour MPS. Don't front-load it all at dinner.<br><br>
+            <span style="color:var(--text);font-weight:600">Pre-training:</span> 30–40g protein 1.5–2 hours before training<br>
+            <span style="color:var(--text);font-weight:600">Post-training:</span> 30–40g protein within 2 hours after training<br>
+            <span style="color:var(--text);font-weight:600">Before bed:</span> 30–40g casein-rich protein (curd/paneer/casein shake). Res et al. 2012: pre-sleep protein improves overnight MPS.
+          </div>
+        </div>
+        <div>
+          <div style="font-weight:700;font-size:0.85rem;color:var(--text-muted);margin-bottom:0.35rem;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.06em">Practical sources at Indian pricing</div>
+          <div style="font-size:0.85rem;color:var(--text-dim);line-height:1.7">
+            Eggs (6g/egg) · Chicken breast (31g/100g) · Curd/Greek yoghurt (10g/100g) · Paneer (18g/100g) · Whey protein (24–25g/scoop) · Dal/lentils (9g/100g cooked) · Fish (20–25g/100g)<br><br>
+            <span style="color:var(--text-dim);font-style:italic">A realistic day: 4 eggs breakfast (24g) + chicken lunch (40g) + whey shake (50g from 2 scoops) + paneer/fish dinner (35g) + curd before bed (30g) = ~180g</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="exercise open">
+    <div class="exercise-head" onclick="toggleExercise(this)">
+      <span class="ex-num" style="background:var(--amber-bg);color:var(--amber);border-color:rgba(245,158,11,0.15)">C</span>
+      <span class="ex-name">Calories — 2,100–2,300 kcal / Day</span>
+      <span class="ex-toggle">▼</span>
+    </div>
+    <div class="exercise-body">
+      <div class="research-note">Estimated TDEE at 91 kg, 4× resistance training, sedentary job + LISS ≈ 2,700–2,900 kcal. A 500–700 kcal/day deficit = ~0.45–0.65 kg/week loss. Research (Garthe et al. 2011): slower rate of loss (~0.7% BW/week) preserves significantly more muscle than aggressive cuts (~1.4% BW/week). At 91 kg, 0.7% = ~0.64 kg/week.</div>
+      <div style="padding:1rem 1.25rem">
+        <div style="margin-bottom:1.25rem">
+          <div style="font-weight:700;font-size:0.85rem;color:var(--amber);margin-bottom:0.35rem;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.06em">The math</div>
+          <div style="font-size:0.85rem;color:var(--text-dim);line-height:1.7">
+            <span style="color:var(--text);font-weight:600">BMR (Mifflin-St Jeor):</span> ~1,850–1,950 kcal (estimated for ~91 kg male)<br>
+            <span style="color:var(--text);font-weight:600">Activity multiplier:</span> ×1.45–1.55 (sedentary job + 4× training + LISS)<br>
+            <span style="color:var(--text);font-weight:600">Estimated TDEE:</span> ~2,700–2,900 kcal<br>
+            <span style="color:var(--text);font-weight:600">Target deficit:</span> 500–700 kcal/day<br>
+            <span style="color:var(--text);font-weight:600">Intake target:</span> 2,100–2,300 kcal/day
+          </div>
+        </div>
+        <div style="margin-bottom:1.25rem">
+          <div style="font-weight:700;font-size:0.85rem;color:var(--amber);margin-bottom:0.35rem;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.06em">Macro split</div>
+          <div style="font-size:0.85rem;color:var(--text-dim);line-height:1.7">
+            <span style="color:var(--text);font-weight:600">Protein:</span> 180–200g → 720–800 kcal (priority — set this first)<br>
+            <span style="color:var(--text);font-weight:600">Fat:</span> 60–75g → 540–675 kcal (minimum ~0.7 g/kg for hormonal health — Helms)<br>
+            <span style="color:var(--text);font-weight:600">Carbs:</span> remaining → 150–200g → 600–800 kcal (fuels training, supports recovery)<br><br>
+            <span style="color:var(--text-dim);font-style:italic">Don't cut fats below 55g — testosterone production drops. Don't cut carbs below 130g — training performance tanks. Protein is non-negotiable. Adjust carbs and fats within these floors to hit your calorie target.</span>
+          </div>
+        </div>
+        <div>
+          <div style="font-weight:700;font-size:0.85rem;color:var(--amber);margin-bottom:0.35rem;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.06em">Tracking & adjusting</div>
+          <div style="font-size:0.85rem;color:var(--text-dim);line-height:1.55">Start at 2,200 kcal. Weigh yourself daily, take the weekly average. If losing 0.5–0.7 kg/week → stay. If losing faster → add 100 kcal. If stalling for 2+ weeks → drop 100 kcal. Never go below 1,900 kcal at your bodyweight and training load — below that, recovery collapses and you start losing muscle regardless of protein intake.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="volume-audit" style="margin-top:1.75rem">
+    <strong>Daily Targets Summary:</strong> 2,100–2,300 kcal · 180–200g protein · 60–75g fat · 150–200g carbs · 8,000–10,000 steps · 3–4L water<br><br>
+    <strong>Rate of loss:</strong> 0.5–0.7 kg/week (0.5–0.7% BW). Adjust calories every 2 weeks based on weekly weight average. These are estimates — your actual TDEE may differ. Track, measure, adjust.
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ DAILY ═══════════════════════════════════════════════════ -->
+<section class="day-section" id="daily">
+  <div class="day-header">
+    <div class="day-label">Lifestyle & Recovery</div>
+    <div class="day-title">Daily Protocol <span>— Sleep, Supplements, Posture, Brain</span></div>
+  </div>
+
+  <!-- ── DAILY SCHEDULE ── -->
+  <div class="exercise open">
+    <div class="exercise-head" onclick="toggleExercise(this)">
+      <span class="ex-num" style="background:var(--amber-bg);color:var(--amber);border-color:rgba(245,158,11,0.15)">⏱</span>
+      <span class="ex-name">Training Day Schedule</span>
+      <span class="ex-toggle">▼</span>
+    </div>
+    <div class="exercise-body">
+      <div class="research-note">Built around your actual schedule: wake 6:00–6:30, gym 7:30–9:00, WFH 9:30–6:30, bed by 10:15–10:30. Protein timing follows Schoenfeld & Aragon 2018 (4 feedings, 0.4–0.55 g/kg per meal).</div>
+      <div style="padding:1rem 1.25rem;font-size:0.82rem;line-height:1.7;color:var(--text-dim)">
+        <div style="display:grid;grid-template-columns:auto 1fr;gap:0.15rem 1rem">
+          <span style="color:var(--amber);font-family:'JetBrains Mono',monospace;font-weight:600;font-size:0.78rem">6:00</span><span><strong style="color:var(--text)">Wake up.</strong> Glass of water (500 ml). 5g creatine with water.</span>
+          <span style="color:var(--amber);font-family:'JetBrains Mono',monospace;font-weight:600;font-size:0.78rem">6:15</span><span><strong style="color:var(--text)">Pre-gym meal.</strong> 3 whole eggs + 2 whites scrambled + 1 banana (30g protein, ~300 kcal). Coffee if needed.</span>
+          <span style="color:var(--amber);font-family:'JetBrains Mono',monospace;font-weight:600;font-size:0.78rem">7:30</span><span><strong style="color:var(--text)">Gym.</strong> Dynamic warm-up → training session.</span>
+          <span style="color:var(--amber);font-family:'JetBrains Mono',monospace;font-weight:600;font-size:0.78rem">9:00</span><span><strong style="color:var(--text)">Post-gym shake.</strong> 1 scoop whey + banana (25g protein). Sip on the way to desk.</span>
+          <span style="color:var(--amber);font-family:'JetBrains Mono',monospace;font-weight:600;font-size:0.78rem">9:30</span><span>Morning call. Sit straight — posture resets after gym are the easiest.</span>
+          <span style="color:var(--amber);font-family:'JetBrains Mono',monospace;font-weight:600;font-size:0.78rem">10:00</span><span><strong style="color:var(--text)">Breakfast / Meal 2.</strong> Rice + chicken/fish (40–50g protein, ~500 kcal).</span>
+          <span style="color:var(--amber);font-family:'JetBrains Mono',monospace;font-weight:600;font-size:0.78rem">10:30</span><span>Work begins. Set 30-min posture timer.</span>
+          <span style="color:var(--amber);font-family:'JetBrains Mono',monospace;font-weight:600;font-size:0.78rem">1:30</span><span><strong style="color:var(--text)">Lunch break / Meal 3.</strong> Rice + dal + chicken/eggs + vegetables (40–50g protein, ~500 kcal). 15-min walk after eating.</span>
+          <span style="color:var(--amber);font-family:'JetBrains Mono',monospace;font-weight:600;font-size:0.78rem">4:00</span><span><strong style="color:var(--text)">Snack break.</strong> Handful of nuts + curd/yoghurt or 2 boiled egg whites (10–15g protein, ~150 kcal).</span>
+          <span style="color:var(--amber);font-family:'JetBrains Mono',monospace;font-weight:600;font-size:0.78rem">6:30</span><span>Work ends. Get away from the screen.</span>
+          <span style="color:var(--amber);font-family:'JetBrains Mono',monospace;font-weight:600;font-size:0.78rem">7:30</span><span><strong style="color:var(--text)">Dinner / Meal 4.</strong> Fish/paneer + vegetables + rice/roti (35–40g protein, ~500 kcal). Keep it moderate — not the biggest meal.</span>
+          <span style="color:var(--amber);font-family:'JetBrains Mono',monospace;font-weight:600;font-size:0.78rem">9:00</span><span>Screens off. No phone/laptop. Read, stretch, or brain activity (see below).</span>
+          <span style="color:var(--amber);font-family:'JetBrains Mono',monospace;font-weight:600;font-size:0.78rem">9:30</span><span><strong style="color:var(--text)">Before bed.</strong> 200g curd or casein shake (20g protein). Dim lights.</span>
+          <span style="color:var(--amber);font-family:'JetBrains Mono',monospace;font-weight:600;font-size:0.78rem">10:15</span><span><strong style="color:var(--text)">In bed.</strong> 8 hours to 6:15 wake.</span>
+        </div>
+        <div style="margin-top:1rem;padding-top:0.75rem;border-top:1px solid var(--border);color:var(--text-muted);font-size:0.78rem">
+          <strong style="color:var(--text)">Day total:</strong> ~180–200g protein across 5 feedings · ~2,100–2,300 kcal · Rest days: skip pre-gym meal and post-gym shake, distribute those calories across other meals.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SLEEP ── -->
+  <div style="margin-top:2.5rem;padding-bottom:0.5rem;border-bottom:1px solid var(--border)">
+    <div class="day-label">Recovery</div>
+    <div class="day-title" style="font-size:1.3rem">Sleep</div>
+  </div>
+
+  <div class="exercise open">
+    <div class="exercise-head" onclick="toggleExercise(this)">
+      <span class="ex-num" style="background:var(--purple-bg);color:var(--purple);border-color:rgba(167,139,250,0.15)">8h</span>
+      <span class="ex-name">Target: 7.5–8.5 Hours / Night</span>
+      <span class="ex-toggle">▼</span>
+    </div>
+    <div class="exercise-body">
+      <div class="research-note">Nedeltcheva et al. 2010 (Annals of Internal Medicine): participants in a caloric deficit who slept 5.5h lost 60% more lean mass and 55% less fat than those sleeping 8.5h — same deficit, same diet. Sleep is not optional during a cut. Hirshkowitz et al. 2015 (National Sleep Foundation): 7–9 hours recommended for adults 26–64.</div>
+      <div style="padding:1rem 1.25rem">
+        <div style="margin-bottom:1.25rem">
+          <div style="font-weight:700;font-size:0.85rem;color:var(--purple);margin-bottom:0.35rem;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.06em">Why 8 hours matters more in a deficit</div>
+          <div style="font-size:0.85rem;color:var(--text-dim);line-height:1.55">Sleep restriction increases cortisol, reduces testosterone, increases ghrelin (hunger hormone), and impairs insulin sensitivity. All of these directly oppose your goals — you hold more fat, lose more muscle, feel hungrier, and recover slower. Dattilo et al. 2011: sleep deprivation reduces muscle protein synthesis by 18% even with adequate protein intake.</div>
+        </div>
+        <div style="margin-bottom:1.25rem">
+          <div style="font-weight:700;font-size:0.85rem;color:var(--purple);margin-bottom:0.35rem;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.06em">Your schedule</div>
+          <div style="font-size:0.85rem;color:var(--text-dim);line-height:1.7">
+            <span style="color:var(--text);font-weight:600">Bed:</span> 10:00–10:15 PM (aim for this, not 11:30)<br>
+            <span style="color:var(--text);font-weight:600">Wake:</span> 6:00–6:15 AM<br>
+            <span style="color:var(--text);font-weight:600">Total:</span> ~8 hours<br>
+            <span style="color:var(--text);font-weight:600">Screens off:</span> 9:00 PM (blue light suppresses melatonin — Chang et al. 2015)
+          </div>
+        </div>
+        <div>
+          <div style="font-weight:700;font-size:0.85rem;color:var(--text-muted);margin-bottom:0.35rem;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.06em">Sleep hygiene basics</div>
+          <div style="font-size:0.85rem;color:var(--text-dim);line-height:1.55">Room temperature 20–22°C (Okamoto-Mizuno 2012). No caffeine after 2 PM — caffeine has a 6-hour half-life (Drake et al. 2013). Consistent wake time even on weekends — circadian rhythm consistency matters more than total hours (Walker 2017). Dim lights after 9 PM. No heavy meals within 2 hours of bed.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── EGGS ── -->
+  <div style="margin-top:2.5rem;padding-bottom:0.5rem;border-bottom:1px solid var(--border)">
+    <div class="day-label">Nutrition Deep Dive</div>
+    <div class="day-title" style="font-size:1.3rem">Egg Guide</div>
+  </div>
+
+  <div class="exercise open">
+    <div class="exercise-head" onclick="toggleExercise(this)">
+      <span class="ex-num" style="background:var(--orange-bg);color:var(--orange);border-color:rgba(251,146,60,0.15)">🥚</span>
+      <span class="ex-name">How Many Eggs Can You Safely Eat</span>
+      <span class="ex-toggle">▼</span>
+    </div>
+    <div class="exercise-body">
+      <div class="research-note">Carter et al. 2025 (American Journal of Clinical Nutrition): 2 eggs/day within a low-saturated-fat diet actually reduced LDL cholesterol compared to a high-saturated-fat egg-free diet. The key finding: saturated fat, not dietary cholesterol from eggs, is the primary driver of LDL levels. Framingham Offspring Study (2024): consuming 5+ eggs/week was not adversely associated with lipid outcomes in healthy adults.</div>
+      <div style="padding:1rem 1.25rem">
+        <div style="margin-bottom:1.25rem">
+          <div style="font-weight:700;font-size:0.85rem;color:var(--orange);margin-bottom:0.5rem;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.06em">Whole eggs vs whites — the numbers</div>
+          <div class="table-scroll"><table class="set-table"><thead><tr><th>Type</th><th>Protein</th><th>Calories</th><th>Fat</th><th>Cholesterol</th></tr></thead><tbody>
+            <tr><td class="col-weight">1 Whole Egg (large)</td><td class="col-reps">6.3g</td><td class="col-rest">72 kcal</td><td class="col-rpe">5g</td><td class="col-notes">186 mg</td></tr>
+            <tr><td class="col-weight">1 Egg White</td><td class="col-reps">3.6g</td><td class="col-rest">17 kcal</td><td class="col-rpe">0g</td><td class="col-notes">0 mg</td></tr>
+          </tbody></table></div>
+        </div>
+        <div style="margin-bottom:1.25rem">
+          <div style="font-weight:700;font-size:0.85rem;color:var(--orange);margin-bottom:0.5rem;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.06em">Safe daily limits (healthy 27-year-old, no CVD history)</div>
+          <div style="font-size:0.85rem;color:var(--text-dim);line-height:1.7">
+            <span style="color:var(--text);font-weight:600">Conservative:</span> 3 whole eggs/day + unlimited whites — universally accepted safe. AHA, Harvard, Heart Foundation NZ all support this level.<br>
+            <span style="color:var(--text);font-weight:600">Moderate:</span> 4–5 whole eggs/day + whites — supported by Framingham data (5+/week, no adverse lipids) and PROSPERITY trial (12/week ≈ ~2/day, no adverse effects at higher levels).<br>
+            <span style="color:var(--text);font-weight:600">Aggressive:</span> 6+ whole eggs/day — limited long-term data. Not recommended as your primary protein source. Diminishing returns on nutrition density.<br><br>
+            <span style="color:var(--text-dim);font-style:italic">The critical factor is what you eat WITH the eggs. Eggs + butter + white bread = bad. Eggs + vegetables + whole grains = the context in which all the positive research was done.</span>
+          </div>
+        </div>
+        <div>
+          <div style="font-weight:700;font-size:0.85rem;color:var(--orange);margin-bottom:0.5rem;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.06em">Practical egg combos for your protein target</div>
+          <div style="font-size:0.85rem;color:var(--text-dim);line-height:1.7">
+            <span style="color:var(--text);font-weight:600">Budget option:</span> 4 whole + 6 whites = 4×6.3 + 6×3.6 = 46.8g protein, 356 kcal — that's 25% of your daily protein for ~16% of calories.<br>
+            <span style="color:var(--text);font-weight:600">Moderate option:</span> 3 whole + 4 whites = 33.3g protein, 284 kcal.<br>
+            <span style="color:var(--text);font-weight:600">Lean option:</span> 2 whole + 6 whites = 34.2g protein, 246 kcal.<br><br>
+            Spread across meals: 3 whole eggs at pre-gym (6:15 AM), whites in lunch omelette or snack.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SUPPLEMENTS ── -->
+  <div style="margin-top:2.5rem;padding-bottom:0.5rem;border-bottom:1px solid var(--border)">
+    <div class="day-label">Supplements</div>
+    <div class="day-title" style="font-size:1.3rem">Creatine & Protein Timing</div>
+  </div>
+
+  <div class="exercise open">
+    <div class="exercise-head" onclick="toggleExercise(this)">
+      <span class="ex-num" style="background:var(--green-bg);color:var(--green);border-color:rgba(52,211,153,0.15)">Cr</span>
+      <span class="ex-name">Creatine Monohydrate — 5g / Day</span>
+      <span class="ex-toggle">▼</span>
+    </div>
+    <div class="exercise-body">
+      <div class="research-note">Kreider et al. 2017 (ISSN position stand): creatine monohydrate is the most effective ergogenic nutritional supplement for increasing high-intensity exercise capacity and lean body mass. Safe for long-term daily use. No loading phase needed — 5g/day reaches saturation in ~28 days.</div>
+      <div style="padding:1rem 1.25rem">
+        <div style="margin-bottom:1.25rem">
+          <div style="font-weight:700;font-size:0.85rem;color:var(--green);margin-bottom:0.35rem;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.06em">When to take</div>
+          <div style="font-size:0.85rem;color:var(--text-dim);line-height:1.55">Timing doesn't matter much — saturation is what counts (Kreider 2017). Antonio & Ciccone 2013 showed a slight advantage for post-workout, but the effect was small. Take it whenever you'll be consistent. Morning with water is simple. Don't overcomplicate this.</div>
+        </div>
+        <div>
+          <div style="font-weight:700;font-size:0.85rem;color:var(--green);margin-bottom:0.35rem;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.06em">Practical</div>
+          <div style="font-size:0.85rem;color:var(--text-dim);line-height:1.55">5g (one level teaspoon) of creatine monohydrate in water, every day including rest days. Buy the cheapest unflavoured creatine monohydrate — brand doesn't matter, it's all the same molecule. Expect 1–2 kg of water weight gain in the first 2 weeks — this is intramuscular water, not fat. Don't panic.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="exercise">
+    <div class="exercise-head" onclick="toggleExercise(this)">
+      <span class="ex-num" style="background:var(--orange-bg);color:var(--orange);border-color:rgba(251,146,60,0.15)">W</span>
+      <span class="ex-name">Whey Protein — When & How Much</span>
+      <span class="ex-toggle">▼</span>
+    </div>
+    <div class="exercise-body">
+      <div class="research-note">Whey is a convenience tool, not magic. Jäger et al. 2017 (ISSN): no advantage to whey over whole food protein at equal doses. Use it when whole food is impractical (post-gym, before bed if you don't want curd).</div>
+      <div style="padding:1rem 1.25rem">
+        <div style="font-size:0.85rem;color:var(--text-dim);line-height:1.7">
+          <span style="color:var(--text);font-weight:600">Post-gym (9:00 AM):</span> 1 scoop (25g protein) — fast-digesting, easy to consume during 9:30 call. Mix with water, not milk (saves ~100 kcal in a deficit).<br><br>
+          <span style="color:var(--text);font-weight:600">Before bed (optional):</span> If you can't do curd/paneer, casein protein is better than whey here — slower digestion sustains overnight MPS (Res et al. 2012). If you only have whey, mix it with curd to slow absorption.<br><br>
+          <span style="color:var(--text);font-weight:600">Total from shakes:</span> 1–2 scoops/day max. Get 70%+ of protein from real food. Shakes are for the gap, not the foundation.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── DINNER TIMING ── -->
+  <div style="margin-top:2.5rem;padding-bottom:0.5rem;border-bottom:1px solid var(--border)">
+    <div class="day-label">Meal Timing</div>
+    <div class="day-title" style="font-size:1.3rem">Dinner Window</div>
+  </div>
+
+  <div class="exercise open">
+    <div class="exercise-head" onclick="toggleExercise(this)">
+      <span class="ex-num" style="background:var(--amber-bg);color:var(--amber);border-color:rgba(245,158,11,0.15)">🍽</span>
+      <span class="ex-name">Dinner by 7:30–8:00 PM</span>
+      <span class="ex-toggle">▼</span>
+    </div>
+    <div class="exercise-body">
+      <div class="research-note">Kinsey & Ormsbee 2015: eating a large meal within 2 hours of bed disrupts sleep architecture — more time in light sleep, less in deep/REM. At your target bedtime of 10:00–10:15, dinner needs to be done by 8:00 PM. A small protein snack (curd/casein) at 9:30 is fine — it's a large meal that causes problems, not a light snack.</div>
+      <div style="padding:1rem 1.25rem">
+        <div style="font-size:0.85rem;color:var(--text-dim);line-height:1.7">
+          <span style="color:var(--text);font-weight:600">Work ends 6:30 →</span> cook/order by 7:00 → eat 7:15–7:45 → done by 8:00.<br>
+          <span style="color:var(--text);font-weight:600">Dinner should be moderate</span> — not your biggest meal. Heavy Kerala-style rice + curry dinners will spike blood glucose and impair sleep onset. Lighter option: fish/chicken + vegetables + small portion of rice.<br>
+          <span style="color:var(--text);font-weight:600">Before-bed snack (9:30 PM):</span> 200g curd or casein shake. This is your overnight protein dose — small, slow-digesting, doesn't disrupt sleep.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── POSTURE ── -->
+  <div style="margin-top:2.5rem;padding-bottom:0.5rem;border-bottom:1px solid var(--border)">
+    <div class="day-label">Desk Health</div>
+    <div class="day-title" style="font-size:1.3rem">Posture & Sitting Protocol</div>
+  </div>
+
+  <div class="exercise open">
+    <div class="exercise-head" onclick="toggleExercise(this)">
+      <span class="ex-num" style="background:var(--red-bg);color:var(--red);border-color:rgba(248,113,113,0.15)">!</span>
+      <span class="ex-name">What Crouching at a Desk Does to You</span>
+      <span class="ex-toggle">▼</span>
+    </div>
+    <div class="exercise-body">
+      <div class="research-note">Upper crossed syndrome (Janda): tight pecs + upper traps, weak deep neck flexors + lower traps. Lower crossed syndrome: tight hip flexors + erectors, weak glutes + abs. You're training the correct muscles (rear delts, face pulls, hip thrusts, core) — but 8+ hours of crouching daily will undo the training adaptations if you don't intervene during the workday.</div>
+      <div style="padding:1rem 1.25rem">
+        <div style="margin-bottom:1.25rem">
+          <div style="font-weight:700;font-size:0.85rem;color:var(--red);margin-bottom:0.5rem;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.06em">Your specific damage pattern</div>
+          <div style="font-size:0.85rem;color:var(--text-dim);line-height:1.7">
+            <span style="color:var(--text);font-weight:600">Forward head posture</span> — staring at monitor with chin jutting forward. Loads cervical spine at 5× normal (Hansraj 2014). Gives you neck pain and headaches.<br>
+            <span style="color:var(--text);font-weight:600">Rounded shoulders</span> — crouching forward tightens pecs and front delts, inhibits rear delts and mid traps. Your face pulls and rear delt work fights this, but 4 sets/week vs 40+ hours of crouching — crouching wins unless you intervene.<br>
+            <span style="color:var(--text);font-weight:600">Hip flexor shortening</span> — sitting for hours locks iliopsoas in shortened position. Directly reduces squat depth, reduces hip thrust lockout force, and causes anterior pelvic tilt (lower belly pooch even at low body fat).<br>
+            <span style="color:var(--text);font-weight:600">Glute amnesia</span> — prolonged sitting literally reduces neural drive to glutes (McGill 2007). Your hip thrusts fight this but desk work fights back.
+          </div>
+        </div>
+        <div style="margin-bottom:1.25rem">
+          <div style="font-weight:700;font-size:0.85rem;color:var(--green);margin-bottom:0.5rem;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.06em">The fix — fitted to your work schedule</div>
+          <div style="font-size:0.85rem;color:var(--text-dim);line-height:1.7">
+            <span style="color:var(--text);font-weight:600">Every 30 min:</span> Stand for 30 seconds. Just stand up and sit back down. Set a phone timer. This alone improves insulin sensitivity (Dempsey et al. 2016).<br><br>
+            <span style="color:var(--text);font-weight:600">Every 60 min (takes 90 seconds):</span><br>
+            • Standing hip flexor stretch — 20s/side<br>
+            • Chin tucks — 10 reps (fixes forward head posture)<br>
+            • Squeeze shoulder blades together — hold 5s × 5 reps<br><br>
+            <span style="color:var(--text);font-weight:600">During 1:30 PM break:</span> 15-min walk after lunch + 5 min of the stretches above.<br>
+            <span style="color:var(--text);font-weight:600">During 4:00 PM break:</span> Stand, hip flexor stretch, 2-min walk. Even in 15 minutes you can reset.
+          </div>
+        </div>
+        <div>
+          <div style="font-weight:700;font-size:0.85rem;color:var(--blue);margin-bottom:0.5rem;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.06em">Monitor & chair setup (WFH essentials)</div>
+          <div style="font-size:0.85rem;color:var(--text-dim);line-height:1.7">
+            <span style="color:var(--text);font-weight:600">Monitor height:</span> Top of screen at eye level. If using a laptop, get a ₹500 laptop stand and external keyboard. This single change eliminates most forward head posture.<br>
+            <span style="color:var(--text);font-weight:600">Chair:</span> Feet flat on floor, knees at 90°, back against chair. If your chair is bad, a rolled towel behind your lower back is better than nothing.<br>
+            <span style="color:var(--text);font-weight:600">20-20-20 rule for eyes:</span> Every 20 min, look at something 20 feet away for 20 seconds. Reduces digital eye strain (Sheppard & Wolffsohn 2018).
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── BRAIN TRAINING ── -->
+  <div style="margin-top:2.5rem;padding-bottom:0.5rem;border-bottom:1px solid var(--border)">
+    <div class="day-label">Cognitive Fitness</div>
+    <div class="day-title" style="font-size:1.3rem">Brain Training in the AI Era</div>
+  </div>
+
+  <div class="exercise open">
+    <div class="exercise-head" onclick="toggleExercise(this)">
+      <span class="ex-num" style="background:var(--purple-bg);color:var(--purple);border-color:rgba(167,139,250,0.15)">🧠</span>
+      <span class="ex-name">The Problem — Cognitive Offloading</span>
+      <span class="ex-toggle">▼</span>
+    </div>
+    <div class="exercise-body">
+      <div class="research-note">Dergaa et al. 2024 (Frontiers in Psychology): AI chatbots promote "cognitive offloading" — delegating memory, analysis, and problem-solving to external tools. Risko & Gilbert 2016 (Trends in Cognitive Sciences): cognitive offloading reduces internal cognitive effort, and repeated offloading weakens the underlying skill — like a muscle you stop training. Gerlich 2025 (Societies): individuals who heavily use AI tools show reduced critical thinking scores and lower cognitive resilience.</div>
+      <div style="padding:1rem 1.25rem">
+        <div style="font-size:0.85rem;color:var(--text-dim);line-height:1.7">
+          You're not "getting stupid." What's happening is you're outsourcing cognitive effort to AI and social media algorithms, and the skills you're not using are decaying — exactly like muscle atrophy from not training. The research calls this <strong style="color:var(--text)">"cognitive debt"</strong> (Kosmyna et al. 2025, MIT Media Lab): each act of outsourcing thinking accumulates a deficit in your own capacity.<br><br>
+          The analogy is direct: your training programme exists because muscles atrophy in a deficit if you don't stimulate them. Your brain works the same way. AI removes the "load" from thinking → your thinking "muscles" atrophy → you feel stupider. The fix is the same: apply deliberate cognitive load.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="exercise open">
+    <div class="exercise-head" onclick="toggleExercise(this)">
+      <span class="ex-num" style="background:var(--green-bg);color:var(--green);border-color:rgba(52,211,153,0.15)">Rx</span>
+      <span class="ex-name">The Fix — Daily Cognitive Load Protocol</span>
+      <span class="ex-toggle">▼</span>
+    </div>
+    <div class="exercise-body">
+      <div class="research-note">Just as your body needs progressive overload, your brain needs "germane load" — cognitive effort directed at learning and problem-solving (Cognitive Load Theory, Sweller et al. 2011). The key is replacing passive consumption (scrolling, watching, asking AI) with active production (writing, solving, creating, recalling).</div>
+      <div style="padding:1rem 1.25rem">
+        <div style="margin-bottom:1.5rem">
+          <div style="font-weight:700;font-size:0.85rem;color:var(--green);margin-bottom:0.5rem;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.06em">9:00–10:00 PM — Your Brain Training Window</div>
+          <div style="font-size:0.85rem;color:var(--text-dim);line-height:1.55">Screens are off at 9:00 anyway for sleep. Use this hour for one of these (rotate through the week):</div>
+        </div>
+        <div style="margin-bottom:1.25rem">
+          <div style="font-weight:700;font-size:0.85rem;color:var(--amber);margin-bottom:0.5rem;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.06em">1. Deep Reading — 30 min (3× per week)</div>
+          <div style="font-size:0.85rem;color:var(--text-dim);line-height:1.55">Physical book, not Kindle/phone. Fiction or non-fiction that requires sustained attention. Carr 2020 (The Shallows): deep reading activates regions for language, memory, and visual imagery simultaneously — the exact regions that atrophy with scrolling. Start with manga if that's easier — Vinland Saga requires more cognitive engagement than Instagram reels. Graduate to books. The goal is 30 minutes of uninterrupted focus on a single narrative.</div>
+        </div>
+        <div style="margin-bottom:1.25rem">
+          <div style="font-weight:700;font-size:0.85rem;color:var(--amber);margin-bottom:0.5rem;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.06em">2. Write by Hand — 15 min (2× per week)</div>
+          <div style="font-size:0.85rem;color:var(--text-dim);line-height:1.55">Journal, problem analysis, or summarize something you learned that day — in a physical notebook. Mueller & Oppenheimer 2014 (Psychological Science): handwriting engages deeper cognitive processing than typing. Don't use AI to structure your thoughts first. The struggle of organizing messy ideas on paper IS the exercise. Write about a work problem, something you read, or just what happened that day.</div>
+        </div>
+        <div style="margin-bottom:1.25rem">
+          <div style="font-weight:700;font-size:0.85rem;color:var(--amber);margin-bottom:0.5rem;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.06em">3. Problem-Solve Without AI — 1× per week</div>
+          <div style="font-size:0.85rem;color:var(--text-dim);line-height:1.55">When you hit a coding or data problem at work, try solving it yourself for 30 minutes before asking AI. Not for everything — just pick one problem per week where you work through the logic manually. Debug by reading the stack trace, trace the data flow, check the docs. The frustration you feel is the cognitive equivalent of muscle tension under load — it's the signal that growth is happening.</div>
+        </div>
+        <div style="margin-bottom:1.25rem">
+          <div style="font-weight:700;font-size:0.85rem;color:var(--amber);margin-bottom:0.5rem;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.06em">4. Learn Something New — Ongoing</div>
+          <div style="font-size:0.85rem;color:var(--text-dim);line-height:1.55">Pick one skill that has nothing to do with your job. A language, chess, an instrument, mental math — anything with progressive difficulty. Lim et al. 2022 (Alzheimer's & Dementia): cognitively stimulating leisure activities are associated with reduced cognitive decline. The novelty is what matters — your brain adapts to routine work like your muscles adapt to the same exercises.</div>
+        </div>
+        <div>
+          <div style="font-weight:700;font-size:0.85rem;color:var(--red);margin-bottom:0.5rem;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.06em">Social Media & YouTube — Set a Hard Boundary</div>
+          <div style="font-size:0.85rem;color:var(--text-dim);line-height:1.55">Passive consumption (scrolling, autoplay) is the cognitive equivalent of lying on the couch instead of training. Set a daily time limit — 30 min max for entertainment content. Use Screen Time / Digital Wellbeing to enforce it. News and info YouTube is fine if you're actively learning, but be honest about the 80/20 split. If you're watching a 15-min video that could be a 2-min article, you're not learning — you're being entertained while feeling productive. That's the most dangerous form of cognitive offloading.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="key-rule" style="margin-top:1.5rem"><strong>THE PARALLEL:</strong> You built a 4-day programme because muscles atrophy in a deficit without stimulus. Your brain operates on the same principle. AI removes cognitive load → cognitive skills atrophy → you feel stupider. The fix isn't avoiding AI — it's adding deliberate cognitive load the same way you add deliberate training load. Read, write, solve, create. 30–60 minutes per day. Non-negotiable, like protein intake.</div>
+
+</section>
+
+<!-- ═══════════════════════════════════════════════════ ROUTE ═══════════════════════════════════════════════════ -->
+<section class="day-section" id="route">
+  <div class="day-header">
+    <div class="day-label">Visual Map</div>
+    <div class="day-title">Daily Route <span>— Training Day</span></div>
+  </div>
+
+  <div style="margin-top:1rem;display:flex;gap:0.5rem;flex-wrap:wrap">
+    <button class="route-toggle active" onclick="switchRoute('train')">Training Day</button>
+    <button class="route-toggle" onclick="switchRoute('rest')">Rest Day</button>
+  </div>
+
+  <div class="route-map" id="route-train">
+    <div class="route-path">
+
+      <div class="zone zone-morning">
+        <div class="zone-label">🌅 DAWN</div>
+        <div class="node node-wake">
+          <div class="node-time">6:00</div>
+          <div class="node-dot"></div>
+          <div class="node-card">
+            <div class="node-title">Wake Up</div>
+            <div class="node-desc">500 ml water · 5g creatine</div>
+          </div>
+        </div>
+        <div class="path-segment"></div>
+        <div class="node node-food">
+          <div class="node-time">6:15</div>
+          <div class="node-dot dot-orange"></div>
+          <div class="node-card">
+            <div class="node-title">Pre-Gym Fuel</div>
+            <div class="node-desc">3 whole eggs + 2 whites + banana</div>
+            <div class="node-stat"><span class="stat-p">30g P</span><span class="stat-c">300 kcal</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="path-connector"><div class="connector-line"></div><div class="connector-icon">🏋️</div></div>
+
+      <div class="zone zone-gym">
+        <div class="zone-label">💪 GYM</div>
+        <div class="node node-gym">
+          <div class="node-time">7:30</div>
+          <div class="node-dot dot-amber"></div>
+          <div class="node-card card-highlight">
+            <div class="node-title">Training Session</div>
+            <div class="node-desc">Dynamic warm-up → working sets → cooldown</div>
+            <div class="node-stat"><span class="stat-dur">~75 min</span><span class="stat-c">~2,500 steps</span></div>
+          </div>
+        </div>
+        <div class="path-segment"></div>
+        <div class="node node-food">
+          <div class="node-time">9:00</div>
+          <div class="node-dot dot-green"></div>
+          <div class="node-card">
+            <div class="node-title">Post-Gym Shake</div>
+            <div class="node-desc">1 scoop whey + banana (water, not milk)</div>
+            <div class="node-stat"><span class="stat-p">25g P</span><span class="stat-c">200 kcal</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="path-connector"><div class="connector-line"></div><div class="connector-icon">💻</div></div>
+
+      <div class="zone zone-work">
+        <div class="zone-label">🖥️ WORK — Block 1</div>
+        <div class="node node-work">
+          <div class="node-time">9:30</div>
+          <div class="node-dot dot-blue"></div>
+          <div class="node-card">
+            <div class="node-title">Morning Call</div>
+            <div class="node-desc">Sit straight — posture resets easiest post-gym</div>
+          </div>
+        </div>
+        <div class="path-segment seg-short"></div>
+        <div class="node node-food">
+          <div class="node-time">10:00</div>
+          <div class="node-dot dot-orange"></div>
+          <div class="node-card">
+            <div class="node-title">Meal 2 — Breakfast</div>
+            <div class="node-desc">Rice + chicken/fish + vegetables</div>
+            <div class="node-stat"><span class="stat-p">45g P</span><span class="stat-c">500 kcal</span></div>
+          </div>
+        </div>
+        <div class="path-segment seg-short"></div>
+        <div class="node node-work">
+          <div class="node-time">10:30</div>
+          <div class="node-dot dot-blue"></div>
+          <div class="node-card">
+            <div class="node-title">Deep Work</div>
+            <div class="node-desc">⏱ Set 30-min posture timer · Stand every 30 min · Chin tucks + hip flexor stretch every 60 min</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="path-connector"><div class="connector-line"></div><div class="connector-icon">🚶</div></div>
+
+      <div class="zone zone-break">
+        <div class="zone-label">☀️ MIDDAY BREAK</div>
+        <div class="node node-food">
+          <div class="node-time">1:30</div>
+          <div class="node-dot dot-orange"></div>
+          <div class="node-card card-highlight">
+            <div class="node-title">Meal 3 — Lunch</div>
+            <div class="node-desc">Rice + dal + chicken/eggs + veggies</div>
+            <div class="node-stat"><span class="stat-p">45g P</span><span class="stat-c">500 kcal</span></div>
+          </div>
+        </div>
+        <div class="path-segment"></div>
+        <div class="node node-move">
+          <div class="node-time">2:00</div>
+          <div class="node-dot dot-green"></div>
+          <div class="node-card">
+            <div class="node-title">Post-Lunch Walk</div>
+            <div class="node-desc">15 min · ~1,800 steps · Improves insulin sensitivity after meal</div>
+            <div class="node-stat"><span class="stat-c" style="font-size:0.64rem">Gym ~2,500 + walks ~3,600 + passive ~3,500 = ~9,600 steps</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="path-connector"><div class="connector-line"></div><div class="connector-icon">💻</div></div>
+
+      <div class="zone zone-work">
+        <div class="zone-label">🖥️ WORK — Block 2</div>
+        <div class="node node-work">
+          <div class="node-time">2:30</div>
+          <div class="node-dot dot-blue"></div>
+          <div class="node-card">
+            <div class="node-title">Afternoon Work</div>
+            <div class="node-desc">Continue posture timer · Water refill walks</div>
+          </div>
+        </div>
+        <div class="path-segment"></div>
+        <div class="node node-food">
+          <div class="node-time">4:00</div>
+          <div class="node-dot dot-orange"></div>
+          <div class="node-card">
+            <div class="node-title">Snack Break</div>
+            <div class="node-desc">Nuts + curd or 2 boiled egg whites · Stand + stretch</div>
+            <div class="node-stat"><span class="stat-p">15g P</span><span class="stat-c">150 kcal</span></div>
+          </div>
+        </div>
+        <div class="path-segment seg-short"></div>
+        <div class="node node-work">
+          <div class="node-time">4:15</div>
+          <div class="node-dot dot-blue"></div>
+          <div class="node-card">
+            <div class="node-title">Final Work Block</div>
+            <div class="node-desc">Last posture round · Wrap up by 6:30</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="path-connector"><div class="connector-line"></div><div class="connector-icon">🌆</div></div>
+
+      <div class="zone zone-evening">
+        <div class="zone-label">🌙 EVENING</div>
+        <div class="node node-free">
+          <div class="node-time">6:30</div>
+          <div class="node-dot dot-purple"></div>
+          <div class="node-card">
+            <div class="node-title">Work Ends</div>
+            <div class="node-desc">Get away from the screen. Walk, cook, decompress.</div>
+          </div>
+        </div>
+        <div class="path-segment"></div>
+        <div class="node node-food">
+          <div class="node-time">7:30</div>
+          <div class="node-dot dot-orange"></div>
+          <div class="node-card card-highlight">
+            <div class="node-title">Meal 4 — Dinner</div>
+            <div class="node-desc">Fish/paneer + vegetables + small rice. Done by 8:00.</div>
+            <div class="node-stat"><span class="stat-p">40g P</span><span class="stat-c">500 kcal</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="path-connector"><div class="connector-line"></div><div class="connector-icon">📖</div></div>
+
+      <div class="zone zone-night">
+        <div class="zone-label">🧠 WIND DOWN</div>
+        <div class="node node-brain">
+          <div class="node-time">9:00</div>
+          <div class="node-dot dot-purple"></div>
+          <div class="node-card card-brain">
+            <div class="node-title">Screens Off · Brain Time</div>
+            <div class="node-desc">Read a book, journal by hand, solve a puzzle, learn something new. No phone.</div>
+          </div>
+        </div>
+        <div class="path-segment"></div>
+        <div class="node node-food">
+          <div class="node-time">9:30</div>
+          <div class="node-dot dot-orange"></div>
+          <div class="node-card">
+            <div class="node-title">Pre-Sleep Protein</div>
+            <div class="node-desc">200g curd or casein shake · Dim lights</div>
+            <div class="node-stat"><span class="stat-p">20g P</span></div>
+          </div>
+        </div>
+        <div class="path-segment"></div>
+        <div class="node node-sleep">
+          <div class="node-time">10:15</div>
+          <div class="node-dot dot-sleep"></div>
+          <div class="node-card card-sleep">
+            <div class="node-title">💤 Sleep</div>
+            <div class="node-desc">8 hours. Room 20–22°C. This is where muscle is saved.</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="route-summary">
+      <div class="route-stat"><span class="route-stat-num">~195g</span><span class="route-stat-label">Protein</span></div>
+      <div class="route-stat"><span class="route-stat-num">~2,200</span><span class="route-stat-label">Calories</span></div>
+      <div class="route-stat"><span class="route-stat-num">5 meals</span><span class="route-stat-label">Feedings</span></div>
+      <div class="route-stat"><span class="route-stat-num" style="color:var(--green)">8–10K</span><span class="route-stat-label">Steps</span></div>
+      <div class="route-stat"><span class="route-stat-num">8 hrs</span><span class="route-stat-label">Sleep</span></div>
+    </div>
+  </div>
+
+  <!-- REST DAY MAP -->
+  <div class="route-map" id="route-rest" style="display:none">
+    <div class="route-path">
+
+      <div class="zone zone-morning">
+        <div class="zone-label">🌅 DAWN</div>
+        <div class="node node-wake">
+          <div class="node-time">6:30</div>
+          <div class="node-dot"></div>
+          <div class="node-card">
+            <div class="node-title">Wake Up</div>
+            <div class="node-desc">500 ml water · 5g creatine (yes, every day)</div>
+          </div>
+        </div>
+        <div class="path-segment"></div>
+        <div class="node node-food">
+          <div class="node-time">7:00</div>
+          <div class="node-dot dot-orange"></div>
+          <div class="node-card">
+            <div class="node-title">Meal 1 — Breakfast</div>
+            <div class="node-desc">3 whole eggs + 2 whites + toast/roti + fruit</div>
+            <div class="node-stat"><span class="stat-p">30g P</span><span class="stat-c">350 kcal</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="path-connector"><div class="connector-line"></div><div class="connector-icon">💻</div></div>
+
+      <div class="zone zone-work">
+        <div class="zone-label">🖥️ WORK</div>
+        <div class="node node-work">
+          <div class="node-time">9:30</div>
+          <div class="node-dot dot-blue"></div>
+          <div class="node-card">
+            <div class="node-title">Morning Call → Work</div>
+            <div class="node-desc">Same posture protocol. 30-min stand timer. Chin tucks + hip flexor stretch every 60 min.</div>
+          </div>
+        </div>
+        <div class="path-segment seg-short"></div>
+        <div class="node node-food">
+          <div class="node-time">10:00</div>
+          <div class="node-dot dot-orange"></div>
+          <div class="node-card">
+            <div class="node-title">Meal 2</div>
+            <div class="node-desc">Rice + chicken/fish</div>
+            <div class="node-stat"><span class="stat-p">45g P</span><span class="stat-c">500 kcal</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="path-connector"><div class="connector-line"></div><div class="connector-icon">🚶</div></div>
+
+      <div class="zone zone-break">
+        <div class="zone-label">☀️ MIDDAY</div>
+        <div class="node node-food">
+          <div class="node-time">1:30</div>
+          <div class="node-dot dot-orange"></div>
+          <div class="node-card card-highlight">
+            <div class="node-title">Meal 3 — Lunch</div>
+            <div class="node-desc">Rice + dal + protein + vegetables</div>
+            <div class="node-stat"><span class="stat-p">45g P</span><span class="stat-c">500 kcal</span></div>
+          </div>
+        </div>
+        <div class="path-segment"></div>
+        <div class="node node-move">
+          <div class="node-time">2:00</div>
+          <div class="node-dot dot-green"></div>
+          <div class="node-card">
+            <div class="node-title">Post-Lunch Walk</div>
+            <div class="node-desc">15 min · Extra important on rest days — no gym steps to count on</div>
+            <div class="node-stat"><span class="stat-c" style="font-size:0.64rem">Morning walk ~1,500 + lunch walk ~1,800 + evening ~1,800 + passive ~3,500 = ~8,600</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="path-connector"><div class="connector-line"></div><div class="connector-icon">💻</div></div>
+
+      <div class="zone zone-work">
+        <div class="zone-label">🖥️ AFTERNOON</div>
+        <div class="node node-food">
+          <div class="node-time">4:00</div>
+          <div class="node-dot dot-orange"></div>
+          <div class="node-card">
+            <div class="node-title">Snack</div>
+            <div class="node-desc">Nuts + curd or whey shake</div>
+            <div class="node-stat"><span class="stat-p">25g P</span><span class="stat-c">200 kcal</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="path-connector"><div class="connector-line"></div><div class="connector-icon">🌆</div></div>
+
+      <div class="zone zone-evening">
+        <div class="zone-label">🌙 EVENING</div>
+        <div class="node node-free">
+          <div class="node-time">6:30</div>
+          <div class="node-dot dot-purple"></div>
+          <div class="node-card">
+            <div class="node-title">Work Ends</div>
+            <div class="node-desc">Wed/Sat: LISS cardio — 30–40 min walk or swim</div>
+          </div>
+        </div>
+        <div class="path-segment"></div>
+        <div class="node node-food">
+          <div class="node-time">7:30</div>
+          <div class="node-dot dot-orange"></div>
+          <div class="node-card card-highlight">
+            <div class="node-title">Meal 4 — Dinner</div>
+            <div class="node-desc">Fish/paneer + vegetables + rice. Done by 8:00.</div>
+            <div class="node-stat"><span class="stat-p">40g P</span><span class="stat-c">500 kcal</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="path-connector"><div class="connector-line"></div><div class="connector-icon">📖</div></div>
+
+      <div class="zone zone-night">
+        <div class="zone-label">🧠 WIND DOWN</div>
+        <div class="node node-brain">
+          <div class="node-time">9:00</div>
+          <div class="node-dot dot-purple"></div>
+          <div class="node-card card-brain">
+            <div class="node-title">Screens Off · Brain Time</div>
+            <div class="node-desc">Read, journal, learn. Extra time on rest days — use it.</div>
+          </div>
+        </div>
+        <div class="path-segment"></div>
+        <div class="node node-food">
+          <div class="node-time">9:30</div>
+          <div class="node-dot dot-orange"></div>
+          <div class="node-card">
+            <div class="node-title">Pre-Sleep Protein</div>
+            <div class="node-desc">200g curd or casein shake</div>
+            <div class="node-stat"><span class="stat-p">20g P</span></div>
+          </div>
+        </div>
+        <div class="path-segment"></div>
+        <div class="node node-sleep">
+          <div class="node-time">10:15</div>
+          <div class="node-dot dot-sleep"></div>
+          <div class="node-card card-sleep">
+            <div class="node-title">💤 Sleep</div>
+            <div class="node-desc">8 hours. Recovery happens here, not at the gym.</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="route-summary">
+      <div class="route-stat"><span class="route-stat-num">~185g</span><span class="route-stat-label">Protein</span></div>
+      <div class="route-stat"><span class="route-stat-num">~2,100</span><span class="route-stat-label">Calories</span></div>
+      <div class="route-stat"><span class="route-stat-num">4 meals</span><span class="route-stat-label">Feedings</span></div>
+      <div class="route-stat"><span class="route-stat-num" style="color:var(--green)">8–10K</span><span class="route-stat-label">Steps</span></div>
+      <div class="route-stat"><span class="route-stat-num">8 hrs</span><span class="route-stat-label">Sleep</span></div>
+    </div>
+  </div>
+
+</section>
+
+<!-- ═══════════════════════════════════════════════════ VOLUME ═══════════════════════════════════════════════════ -->
+<section class="day-section" id="volume">
+  <div class="day-header">
+    <div class="day-label">Reference</div>
+    <div class="day-title">Weekly Volume Summary</div>
+  </div>
+
+  <div class="table-scroll">
+    <table class="summary-table">
+      <thead><tr><th>Muscle Group</th><th>Upper A</th><th>Lower A</th><th>Upper B</th><th>Lower B</th><th>Total</th><th>Assessment</th></tr></thead>
+      <tbody>
+        <tr><td class="muscle">Chest</td><td class="num num-active">3</td><td class="num">—</td><td class="num num-active">5</td><td class="num">—</td><td class="total">8</td><td class="assess">+ indirect from pressing. Above MV. Maintenance mode.</td></tr>
+        <tr><td class="muscle">Back</td><td class="num num-active">6</td><td class="num">—</td><td class="num num-active">5</td><td class="num">—</td><td class="total">11</td><td class="assess">+ indirect from rows. In MAV range for cutting.</td></tr>
+        <tr><td class="muscle">Shoulders (press)</td><td class="num num-active">3</td><td class="num">—</td><td class="num num-active">3</td><td class="num">—</td><td class="total">6</td><td class="assess">+ indirect from bench. Above MV.</td></tr>
+        <tr><td class="muscle">Shoulders (side)</td><td class="num num-active">2</td><td class="num">—</td><td class="num num-active">2</td><td class="num">—</td><td class="total">4</td><td class="assess">Split across both upper days. Missing one still leaves 2.</td></tr>
+        <tr><td class="muscle">Shoulders (rear)</td><td class="num num-active">2</td><td class="num">—</td><td class="num num-active">3</td><td class="num">—</td><td class="total">5</td><td class="assess">Posture fix priority.</td></tr>
+        <tr><td class="muscle">Quads</td><td class="num">—</td><td class="num num-active">8</td><td class="num">—</td><td class="num num-active">3</td><td class="total">11</td><td class="assess">Squat + Hack + Ext + Press. In MAV.</td></tr>
+        <tr><td class="muscle">Hamstrings</td><td class="num">—</td><td class="num num-active">3</td><td class="num">—</td><td class="num num-active">6</td><td class="total">9</td><td class="assess">Above MEV. Resilient to missed session.</td></tr>
+        <tr><td class="muscle">Glutes</td><td class="num">—</td><td class="num num-active">3</td><td class="num">—</td><td class="num num-active">3</td><td class="total">6</td><td class="assess">+ indirect from squat/RDL. Hip thrust on both lower days.</td></tr>
+        <tr><td class="muscle">Core</td><td class="num">—</td><td class="num num-active">3</td><td class="num">—</td><td class="num num-active">3</td><td class="total">6</td><td class="assess">Above MV.</td></tr>
+        <tr><td class="muscle">Triceps</td><td class="num num-active">2</td><td class="num">—</td><td class="num num-active">2</td><td class="num">—</td><td class="total">4</td><td class="assess">+ ~12 indirect from pressing. Plenty.</td></tr>
+        <tr><td class="muscle">Biceps</td><td class="num num-active">2</td><td class="num">—</td><td class="num num-active">2</td><td class="num">—</td><td class="total">4</td><td class="assess">+ ~12 indirect from pulling. Plenty.</td></tr>
+        <tr><td class="muscle">Calves</td><td class="num">—</td><td class="num num-active">3</td><td class="num">—</td><td class="num num-active">3</td><td class="total">6</td><td class="assess">Standing (gastroc) + Seated (soleus).</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ RPE GUIDE ═══════════════════════════════════════════════════ -->
+<section class="day-section" id="rpe">
+  <div class="day-header">
+    <div class="day-label">Reference</div>
+    <div class="day-title">RPE / RIR Cheat Sheet</div>
+  </div>
+  <p style="font-size:0.85rem;color:var(--text-muted);margin-top:1rem">Research: Helms et al. 2016, Zourdos et al. 2016</p>
+
+  <div class="table-scroll">
+    <table class="rpe-table">
+      <thead><tr><th>RPE</th><th>RIR</th><th>How it feels</th><th>When to use</th><th>Example</th></tr></thead>
+      <tbody>
+        <tr><td class="rpe-val rpe-low">6</td><td class="rir-val">4+</td><td>Could do 4+ more reps</td><td>Warm-ups, feeler sets</td><td>First warm-up set of squats</td></tr>
+        <tr><td class="rpe-val rpe-low">7</td><td class="rir-val">3</td><td>Could do 3 more. Challenging but smooth.</td><td>First working set of compounds</td><td>Set 1 of squats at 145 kg</td></tr>
+        <tr><td class="rpe-val rpe-low">7–8</td><td class="rir-val">2–3</td><td>Starting to work hard. Bar speed slowing.</td><td>Middle working sets</td><td>Set 2 of squats</td></tr>
+        <tr><td class="rpe-val rpe-mid">8</td><td class="rir-val">2</td><td>Hard. Could get 2 more with good form.</td><td>Most working sets target here</td><td>Main target for compounds in deficit</td></tr>
+        <tr><td class="rpe-val rpe-high">8–9</td><td class="rir-val">1–2</td><td>Very hard. Maybe 1–2 left, form suffering.</td><td>Last set of compounds</td><td>Set 3 of squats — stop here</td></tr>
+        <tr><td class="rpe-val rpe-high">9</td><td class="rir-val">1</td><td>Grinding. One more possible but ugly.</td><td>Last set of machine/isolation</td><td>Last set of leg extension</td></tr>
+        <tr><td class="rpe-val rpe-max">9–10</td><td class="rir-val">0–1</td><td>Near or at failure. Form breaking.</td><td>ONLY safe isolations, LAST set only</td><td>Last set of lateral raises, curls</td></tr>
+        <tr><td class="rpe-val rpe-max">10</td><td class="rir-val">0</td><td>Cannot do another rep. Absolute failure.</td><td>Rarely. Never heavy compounds.</td><td>Never on squat/RDL/bench in deficit</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="key-rule"><strong>KEY RULE:</strong> In a caloric deficit, compounds stay at RPE 7–8 (2–3 RIR). Only safe isolations go to RPE 9–10 on LAST set. Never grind heavy compounds to failure — drop a set instead.</div>
+</section>
+
+</div>
+
+<script>
+// Tab navigation
+document.querySelectorAll('.nav-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.day-section').forEach(s => s.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.tab).classList.add('active');
+    window.scrollTo({top: 0, behavior: 'smooth'});
+    if(btn.dataset.tab === 'steps') animateStepBar();
+  });
+});
+
+// Exercise expand/collapse
+function toggleExercise(head) {
+  head.closest('.exercise').classList.toggle('open');
+}
+
+// Protocol expand/collapse
+function toggleProtocol(header) {
+  header.classList.toggle('open');
+  header.nextElementSibling.classList.toggle('open');
+}
+
+// Step bar animation
+function animateStepBar() {
+  const bar = document.getElementById('stepBar');
+  const total = document.getElementById('stepTotal');
+  if(!bar) return;
+  bar.style.width = '0%';
+  total.textContent = '0 steps';
+  const target = 9500;
+  const max = 10000;
+  let current = 0;
+  const steps = [200,2700,3100,3900,5700,6100,6700,7200,9000,9500];
+  let i = 0;
+  function step() {
+    if(i >= steps.length) return;
+    current = steps[i];
+    bar.style.width = (current/max*100) + '%';
+    total.textContent = current.toLocaleString() + ' steps';
+    if(current >= 8000) {
+      bar.style.background = 'linear-gradient(90deg,var(--green-dim),var(--green),#a7f3d0)';
+    }
+    i++;
+    setTimeout(step, 300);
+  }
+  setTimeout(step, 400);
+}
+// Route map toggle
+function switchRoute(type) {
+  document.getElementById('route-train').style.display = type === 'train' ? 'block' : 'none';
+  document.getElementById('route-rest').style.display = type === 'rest' ? 'block' : 'none';
+  document.querySelectorAll('.route-toggle').forEach(b => {
+    b.classList.toggle('active', b.textContent.toLowerCase().includes(type === 'train' ? 'training' : 'rest'));
+  });
+}
+</script>
+</body>
+</html>
