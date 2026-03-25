@@ -62,7 +62,7 @@ Each exercise card contains (in order):
 3. **Form tip** (`.form-tip`, green) — 2-3 technique cues from peer-reviewed EMG/biomechanics papers
 4. **Progression tip** (`.tip-row`, orange, optional) — when/how to increase weight
 
-27 exercises total: Upper A (8), Lower A (7), Upper B (9), Lower B (6).
+26 exercises total: Upper A (8), Lower A (7), Upper B (8), Lower B (6).
 
 ## Content Context
 
