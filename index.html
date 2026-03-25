@@ -2144,15 +2144,18 @@ function calculateRIR() {
   const tbody = document.getElementById('rirTableBody');
   tbody.innerHTML = '';
 
+  let graphWeight = weight; // will be updated to RPE 8 recommended weight
+
   rpeRows.forEach(row => {
     const repsAtWeight = Math.max(1, maxReps - row.rir);
     if (repsAtWeight < 1) return;
 
-    let verdict, verdictClass, useWeight;
+    let verdict, verdictClass, useWeight, useWeightNum;
 
     if (repsAtWeight >= rangeMin && repsAtWeight <= rangeMax) {
       verdict = repsAtWeight + ' reps — in range';
       verdictClass = 'color:var(--green)';
+      useWeightNum = weight;
       useWeight = weight + ' kg';
     } else if (repsAtWeight < rangeMin) {
       // Too heavy — need lighter weight to hit rangeMin at this RIR
@@ -2161,6 +2164,7 @@ function calculateRIR() {
       const suggested = roundTo(w, 2.5);
       verdict = repsAtWeight + ' reps — too heavy';
       verdictClass = 'color:var(--red)';
+      useWeightNum = suggested;
       useWeight = suggested + ' kg';
     } else {
       // Too light — need heavier weight to hit rangeMax at this RIR
@@ -2169,8 +2173,12 @@ function calculateRIR() {
       const suggested = roundTo(w, 2.5);
       verdict = repsAtWeight + ' reps — too light';
       verdictClass = 'color:var(--orange)';
+      useWeightNum = suggested;
       useWeight = suggested + ' kg';
     }
+
+    // Use RPE 8 weight for the progression graph (main working set target)
+    if (row.rpe === '8') graphWeight = useWeightNum;
 
     const tr = document.createElement('tr');
     tr.innerHTML =
@@ -2183,8 +2191,8 @@ function calculateRIR() {
 
   document.getElementById('rirResult').classList.add('show');
 
-  // Build progression graph
-  buildProgGraph(weight, rangeMin, rangeMax);
+  // Build progression graph using RPE 8 recommended weight
+  buildProgGraph(graphWeight, rangeMin, rangeMax);
 }
 
 function buildProgGraph(weight, rangeMin, rangeMax) {
