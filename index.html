@@ -73,7 +73,7 @@ body{font-family:'Outfit',sans-serif;color:var(--text);background:var(--bg);line
 .exercise.open .ex-toggle{transform:rotate(180deg)}
 
 .exercise-body{max-height:0;overflow:hidden;transition:max-height 0.35s ease}
-.exercise.open .exercise-body{max-height:1200px}
+.exercise.open .exercise-body{max-height:2400px}
 
 .research-note{padding:0.75rem 1.25rem;font-size:0.78rem;color:var(--blue);background:var(--blue-bg);border-bottom:1px solid var(--border);line-height:1.55}
 
@@ -142,6 +142,8 @@ body{font-family:'Outfit',sans-serif;color:var(--text);background:var(--bg);line
 .rir-calc-field input{width:100%;padding:0.55rem 0.75rem;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:0.9rem;outline:none;transition:border-color 0.2s}
 .rir-calc-field input:focus{border-color:var(--amber)}
 .rir-calc-field input::placeholder{color:var(--text-muted);font-size:0.78rem}
+.rir-calc-field input[type=number]::-webkit-inner-spin-button,.rir-calc-field input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.rir-calc-field input[type=number]{-moz-appearance:textfield}
 .rir-effort{display:flex;gap:0.5rem;margin-bottom:1.25rem}
 .rir-effort-btn{flex:1;padding:0.6rem 0.5rem;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text-dim);font-family:'Outfit',sans-serif;font-size:0.8rem;font-weight:500;cursor:pointer;transition:all 0.2s;text-align:center}
 .rir-effort-btn.active-hard{background:var(--orange-bg);border-color:var(--orange);color:var(--orange)}
@@ -179,23 +181,26 @@ body{font-family:'Outfit',sans-serif;color:var(--text);background:var(--bg);line
 .prog-bump{margin-top:1rem;padding:0.75rem 1rem;background:var(--green-bg);border:1px solid rgba(52,211,153,0.15);border-radius:6px;font-size:0.82rem;color:var(--green);font-weight:600}
 
 /* Inline Exercise Calculator */
-.ex-calc-toggle{display:inline-flex;align-items:center;gap:0.35rem;margin-top:0.75rem;padding:0.45rem 0.85rem;border:1px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--amber);font-family:'Outfit',sans-serif;font-size:0.78rem;font-weight:600;cursor:pointer;transition:all 0.2s}
-.ex-calc-toggle:hover{border-color:var(--amber);background:var(--amber-bg)}
-.ex-calc-panel{display:none;margin-top:0.75rem;padding:1rem;background:var(--surface);border:1px solid var(--border);border-radius:8px}
-.ex-calc-panel.open{display:block}
+.ex-calc-toggle{padding:0.65rem 1.25rem;font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--purple);background:var(--purple-bg);border:none;border-top:1px solid rgba(167,139,250,0.1);width:100%;text-align:left;cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:background 0.2s;font-family:'Outfit',sans-serif}
+.ex-calc-toggle:hover{background:rgba(167,139,250,0.1)}
+.ex-calc-toggle .chevron{transition:transform 0.2s;font-size:0.65rem;color:var(--text-muted)}
+.ex-calc-toggle.open .chevron{transform:rotate(180deg)}
+.ex-calc-panel{max-height:0;overflow:hidden;transition:max-height 0.35s ease,padding 0.35s ease;padding:0 1.25rem;background:var(--purple-bg);border-top:1px solid rgba(167,139,250,0.06)}
+.ex-calc-panel.open{max-height:800px;padding:1rem 1.25rem 1.25rem}
 .ex-calc-row{display:flex;gap:0.6rem;flex-wrap:wrap;margin-bottom:0.75rem;align-items:flex-end}
 .ex-calc-row .rir-calc-field{min-width:70px;flex:1}
+.ex-calc-row .rir-calc-field input{background:var(--surface);font-size:0.85rem}
 .ex-calc-effort{display:flex;gap:0.4rem;margin-bottom:0.75rem}
 .ex-calc-effort .rir-effort-btn{padding:0.45rem 0.4rem;font-size:0.72rem}
-.ex-calc-go{padding:0.5rem 1rem;border:none;border-radius:6px;background:var(--amber);color:#000;font-family:'Outfit',sans-serif;font-size:0.8rem;font-weight:700;cursor:pointer;transition:opacity 0.2s}
+.ex-calc-go{padding:0.5rem 1rem;border:none;border-radius:6px;background:var(--purple);color:#000;font-family:'Outfit',sans-serif;font-size:0.8rem;font-weight:700;cursor:pointer;transition:opacity 0.2s}
 .ex-calc-go:hover{opacity:0.85}
-.ex-calc-result{margin-top:0.75rem;display:none}
+.ex-calc-result{margin-top:1rem;display:none}
 .ex-calc-result.show{display:block}
 .ex-calc-result table{width:100%;border-collapse:collapse;font-size:0.78rem}
-.ex-calc-result th{padding:0.4rem 0.5rem;text-align:left;font-size:0.65rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;background:var(--surface2);border-bottom:1px solid var(--border)}
+.ex-calc-result th{padding:0.4rem 0.5rem;text-align:left;font-size:0.65rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;background:var(--surface);border-bottom:1px solid var(--border)}
 .ex-calc-result td{padding:0.4rem 0.5rem;border-bottom:1px solid var(--border);font-family:'JetBrains Mono',monospace;font-weight:600;font-size:0.78rem}
 .ex-calc-result .rec{color:var(--green)}
-.ex-calc-prog{margin-top:0.75rem;padding:0.75rem;background:var(--surface2);border:1px solid var(--border);border-radius:6px;display:none}
+.ex-calc-prog{margin-top:0.75rem;padding:0.75rem;background:var(--surface);border:1px solid var(--border);border-radius:6px;display:none}
 .ex-calc-prog.show{display:block}
 .ex-calc-prog h4{font-size:0.82rem;font-weight:700;color:var(--amber);margin-bottom:0.25rem}
 .ex-calc-prog .prog-graph-sub{font-size:0.72rem;margin-bottom:0.75rem}
@@ -2322,13 +2327,13 @@ function buildProgGraph(weight, rangeMin, rangeMax) {
 
       const id = 'exc' + (calcId++);
 
-      // Toggle button
-      const toggle = document.createElement('button');
+      // Toggle strip — matches protocol-header pattern
+      const toggle = document.createElement('div');
       toggle.className = 'ex-calc-toggle';
-      toggle.innerHTML = '&#x1F4CA; Calculate My Weight';
+      toggle.innerHTML = 'Weight Calculator <span class="chevron">▼</span>';
       toggle.onclick = function() {
-        const panel = document.getElementById(id);
-        panel.classList.toggle('open');
+        this.classList.toggle('open');
+        document.getElementById(id).classList.toggle('open');
       };
 
       // Panel
@@ -2336,10 +2341,10 @@ function buildProgGraph(weight, rangeMin, rangeMax) {
       panel.className = 'ex-calc-panel';
       panel.id = id;
       panel.innerHTML =
+        `<div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:0.75rem">Programme target: <span style="color:var(--purple);font-family:'JetBrains Mono',monospace;font-weight:700">${rangeMin}–${rangeMax} reps</span></div>` +
         `<div class="ex-calc-row">` +
           `<div class="rir-calc-field"><label>Weight (kg)</label><input type="number" id="${id}-w" placeholder="${defaultWeight || 'kg'}" inputmode="decimal" step="0.5" value="${defaultWeight}"></div>` +
           `<div class="rir-calc-field"><label>Reps done</label><input type="number" id="${id}-r" placeholder="reps" inputmode="numeric" min="1" max="30"></div>` +
-          `<div class="rir-calc-field"><label>Rep range</label><input type="text" value="${rangeMin}–${rangeMax}" disabled style="background:var(--surface2);color:var(--text-dim);text-align:center;width:100%;padding:0.55rem 0.75rem;border:1px solid var(--border);border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:0.85rem"></div>` +
         `</div>` +
         `<label style="display:block;font-size:0.65rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.4rem">How hard was it?</label>` +
         `<div class="ex-calc-effort">` +
