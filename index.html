@@ -161,9 +161,10 @@ body{font-family:'Outfit',sans-serif;color:var(--text);background:var(--bg);line
 .prog-graph.show{display:block}
 .prog-graph h3{font-size:0.95rem;font-weight:700;color:var(--amber);margin-bottom:0.35rem}
 .prog-graph-sub{font-size:0.78rem;color:var(--text-muted);margin-bottom:1.25rem}
-.prog-sessions{display:flex;gap:0.5rem;overflow-x:auto;padding-bottom:0.5rem;-webkit-overflow-scrolling:touch}
+.prog-sessions{display:flex;gap:0;align-items:flex-end;overflow-x:auto;padding-bottom:0.5rem;-webkit-overflow-scrolling:touch}
 .prog-session{display:flex;flex-direction:column;align-items:center;min-width:52px;gap:0.3rem}
 .prog-session-label{font-size:0.65rem;color:var(--text-muted);font-weight:600;white-space:nowrap}
+.prog-arrow{display:flex;align-items:center;color:var(--text-muted);font-size:0.75rem;padding:0 0.15rem;margin-bottom:1.2rem}
 .prog-bars{display:flex;flex-direction:column-reverse;gap:2px;height:120px;justify-content:flex-start;align-items:center}
 .prog-bar{width:36px;border-radius:3px;transition:height 0.4s ease;position:relative;display:flex;align-items:center;justify-content:center}
 .prog-bar span{font-family:'JetBrains Mono',monospace;font-size:0.7rem;font-weight:700;color:#000}
@@ -2236,6 +2237,12 @@ function buildProgGraph(weight, rangeMin, rangeMax) {
 
     col.appendChild(bars);
     col.appendChild(label);
+    if (i > 0) {
+      const arrow = document.createElement('div');
+      arrow.className = 'prog-arrow';
+      arrow.textContent = '\u203A';
+      container.appendChild(arrow);
+    }
     container.appendChild(col);
   });
 
