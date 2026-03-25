@@ -242,7 +242,7 @@ body{font-family:'Outfit',sans-serif;color:var(--text);background:var(--bg);line
 
 <nav class="nav">
   <div class="nav-inner">
-    <button class="nav-btn active" data-tab="upper-a">Upper A</button>
+    <button class="nav-btn" data-tab="upper-a">Upper A</button>
     <button class="nav-btn" data-tab="lower-a">Lower A</button>
     <button class="nav-btn" data-tab="upper-b">Upper B</button>
     <button class="nav-btn" data-tab="lower-b">Lower B</button>
@@ -257,7 +257,7 @@ body{font-family:'Outfit',sans-serif;color:var(--text);background:var(--bg);line
 <div class="container">
 
 <!-- ═══════════════════════════════════════════════════ UPPER A ═══════════════════════════════════════════════════ -->
-<section class="day-section active" id="upper-a">
+<section class="day-section" id="upper-a">
   <div class="day-header">
     <div class="day-label">Monday</div>
     <div class="day-title">Upper A <span>— Strength Focus (Chest + Back)</span></div>
@@ -1918,16 +1918,28 @@ body{font-family:'Outfit',sans-serif;color:var(--text);background:var(--bg);line
 
 <script>
 // Tab navigation
+function switchTab(tabId) {
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.day-section').forEach(s => s.classList.remove('active'));
+  const btn = document.querySelector(`.nav-btn[data-tab="${tabId}"]`);
+  if (btn) btn.classList.add('active');
+  document.getElementById(tabId).classList.add('active');
+  if(tabId === 'steps') animateStepBar();
+}
+
 document.querySelectorAll('.nav-btn').forEach(btn => {
   btn.addEventListener('click', () => {
-    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.day-section').forEach(s => s.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById(btn.dataset.tab).classList.add('active');
+    switchTab(btn.dataset.tab);
     window.scrollTo({top: 0, behavior: 'smooth'});
-    if(btn.dataset.tab === 'steps') animateStepBar();
   });
 });
+
+// Auto-select tab based on day of the week
+(function() {
+  const dayMap = ['daily','upper-a','lower-a','cardio','upper-b','lower-b','cardio'];
+  const today = new Date().getDay(); // 0=Sun,1=Mon,...6=Sat
+  switchTab(dayMap[today]);
+})();
 
 // Exercise expand/collapse
 function toggleExercise(head) {
