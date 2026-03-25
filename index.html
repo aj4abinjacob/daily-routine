@@ -133,6 +133,50 @@ body{font-family:'Outfit',sans-serif;color:var(--text);background:var(--bg);line
 
 .key-rule{margin-top:1.5rem;padding:1rem 1.25rem;background:var(--orange-bg);border:1px solid rgba(251,146,60,0.15);border-radius:8px;font-size:0.85rem;color:var(--orange);line-height:1.55}
 
+/* RIR Calculator */
+.rir-calc{margin-top:1.5rem;padding:1.25rem;background:var(--surface2);border:1px solid var(--border);border-radius:10px}
+.rir-calc h3{font-size:0.95rem;font-weight:700;color:var(--amber);margin-bottom:1rem}
+.rir-calc-inputs{display:flex;gap:0.75rem;flex-wrap:wrap;margin-bottom:1rem}
+.rir-calc-field{flex:1;min-width:80px}
+.rir-calc-field label{display:block;font-size:0.68rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.35rem}
+.rir-calc-field input{width:100%;padding:0.55rem 0.75rem;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:0.9rem;outline:none;transition:border-color 0.2s}
+.rir-calc-field input:focus{border-color:var(--amber)}
+.rir-calc-field input::placeholder{color:var(--text-muted);font-size:0.78rem}
+.rir-effort{display:flex;gap:0.5rem;margin-bottom:1.25rem}
+.rir-effort-btn{flex:1;padding:0.6rem 0.5rem;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text-dim);font-family:'Outfit',sans-serif;font-size:0.8rem;font-weight:500;cursor:pointer;transition:all 0.2s;text-align:center}
+.rir-effort-btn.active-hard{background:var(--orange-bg);border-color:var(--orange);color:var(--orange)}
+.rir-effort-btn.active-near{background:var(--red-bg);border-color:var(--red);color:var(--red)}
+.rir-effort-btn.active-fail{background:rgba(239,68,68,0.12);border-color:#ef4444;color:#ef4444}
+.rir-calc-go{width:100%;padding:0.65rem;border:none;border-radius:6px;background:var(--amber);color:#000;font-family:'Outfit',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;transition:opacity 0.2s}
+.rir-calc-go:hover{opacity:0.85}
+.rir-result{margin-top:1.25rem;display:none}
+.rir-result.show{display:block}
+.rir-result table{width:100%;border-collapse:collapse;font-size:0.82rem}
+.rir-result th{padding:0.55rem 0.6rem;text-align:left;font-size:0.68rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;background:var(--surface);border-bottom:1px solid var(--border)}
+.rir-result td{padding:0.55rem 0.6rem;border-bottom:1px solid var(--border);font-family:'JetBrains Mono',monospace;font-weight:600}
+.rir-result .rec{color:var(--green);font-weight:700}
+
+/* Progression Graph */
+.prog-graph{margin-top:1.5rem;padding:1.25rem;background:var(--surface2);border:1px solid var(--border);border-radius:10px;display:none}
+.prog-graph.show{display:block}
+.prog-graph h3{font-size:0.95rem;font-weight:700;color:var(--amber);margin-bottom:0.35rem}
+.prog-graph-sub{font-size:0.78rem;color:var(--text-muted);margin-bottom:1.25rem}
+.prog-sessions{display:flex;gap:0.5rem;overflow-x:auto;padding-bottom:0.5rem;-webkit-overflow-scrolling:touch}
+.prog-session{display:flex;flex-direction:column;align-items:center;min-width:52px;gap:0.3rem}
+.prog-session-label{font-size:0.65rem;color:var(--text-muted);font-weight:600;white-space:nowrap}
+.prog-bars{display:flex;flex-direction:column-reverse;gap:2px;height:120px;justify-content:flex-start;align-items:center}
+.prog-bar{width:36px;border-radius:3px;transition:height 0.4s ease;position:relative;display:flex;align-items:center;justify-content:center}
+.prog-bar span{font-family:'JetBrains Mono',monospace;font-size:0.7rem;font-weight:700;color:#000}
+.prog-bar.s1{background:var(--amber)}
+.prog-bar.s2{background:var(--blue)}
+.prog-bar.s3{background:var(--green)}
+.prog-session.done{opacity:1}
+.prog-session.done .prog-session-label{color:var(--green)}
+.prog-legend{display:flex;gap:1rem;margin-top:0.75rem;flex-wrap:wrap}
+.prog-legend-item{display:flex;align-items:center;gap:0.35rem;font-size:0.72rem;color:var(--text-dim)}
+.prog-legend-dot{width:10px;height:10px;border-radius:2px}
+.prog-bump{margin-top:1rem;padding:0.75rem 1rem;background:var(--green-bg);border:1px solid rgba(52,211,153,0.15);border-radius:6px;font-size:0.82rem;color:var(--green);font-weight:600}
+
 /* ── RESPONSIVE ── */
 .table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
 @media(max-width:640px){
@@ -251,6 +295,7 @@ body{font-family:'Outfit',sans-serif;color:var(--text);background:var(--bg);line
     <button class="nav-btn" data-tab="route">Route</button>
     <button class="nav-btn" data-tab="volume">Volume</button>
     <button class="nav-btn" data-tab="rpe">RPE Guide</button>
+    <button class="nav-btn" data-tab="rir-calc">RIR Calc</button>
   </div>
 </nav>
 
@@ -1914,6 +1959,77 @@ body{font-family:'Outfit',sans-serif;color:var(--text);background:var(--bg);line
   <div class="key-rule"><strong>KEY RULE:</strong> In a caloric deficit, compounds stay at RPE 7–8 (2–3 RIR). Only safe isolations go to RPE 9–10 on LAST set. Never grind heavy compounds to failure — drop a set instead.</div>
 </section>
 
+<!-- ═══════════════════════════════════════════════════ RIR CALCULATOR ═══════════════════════════════════════════════════ -->
+<section class="day-section" id="rir-calc">
+  <div class="day-header">
+    <div class="day-label">Tool</div>
+    <div class="day-title">RIR Calculator</div>
+  </div>
+  <p style="font-size:0.85rem;color:var(--text-muted);margin-top:1rem">Enter a recent set, how hard it felt, and your programme's rep range. We'll tell you the right weight for each RPE.</p>
+
+  <div class="rir-calc">
+    <h3>Your Recent Set</h3>
+    <div class="rir-calc-inputs">
+      <div class="rir-calc-field">
+        <label>Weight (kg)</label>
+        <input type="number" id="calcWeight" placeholder="e.g. 60" inputmode="decimal" step="0.5">
+      </div>
+      <div class="rir-calc-field">
+        <label>Reps done</label>
+        <input type="number" id="calcReps" placeholder="e.g. 8" inputmode="numeric" min="1" max="30">
+      </div>
+      <div class="rir-calc-field">
+        <label>Rep range</label>
+        <select id="calcRange" style="width:100%;padding:0.55rem 0.75rem;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:0.85rem;outline:none">
+          <option value="4-6">4–6</option>
+          <option value="5-8">5–8</option>
+          <option value="6-8" selected>6–8</option>
+          <option value="6-10">6–10</option>
+          <option value="8-12">8–12</option>
+          <option value="8-15">8–15</option>
+          <option value="10-15">10–15</option>
+          <option value="10-20">10–20</option>
+          <option value="12-20">12–20</option>
+          <option value="15-20">15–20</option>
+          <option value="15-25">15–25</option>
+        </select>
+      </div>
+    </div>
+
+    <label style="display:block;font-size:0.68rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.5rem">How hard was it?</label>
+    <div class="rir-effort">
+      <button class="rir-effort-btn" onclick="selectEffort(this,'hard')" data-rir="2">Hard<br><span style="font-size:0.68rem;opacity:0.7">2 left in tank</span></button>
+      <button class="rir-effort-btn" onclick="selectEffort(this,'near')" data-rir="1">Near Failure<br><span style="font-size:0.68rem;opacity:0.7">1 left in tank</span></button>
+      <button class="rir-effort-btn" onclick="selectEffort(this,'fail')" data-rir="0">Failure<br><span style="font-size:0.68rem;opacity:0.7">Nothing left</span></button>
+    </div>
+
+    <button class="rir-calc-go" onclick="calculateRIR()">Calculate</button>
+
+    <div class="rir-result" id="rirResult">
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr><th>RPE</th><th>Reps at current weight</th><th>Verdict</th><th>Use</th></tr>
+          </thead>
+          <tbody id="rirTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="prog-graph" id="progGraph">
+      <h3>Progression Roadmap</h3>
+      <p class="prog-graph-sub" id="progSub"></p>
+      <div class="prog-sessions" id="progSessions"></div>
+      <div class="prog-legend">
+        <div class="prog-legend-item"><div class="prog-legend-dot" style="background:var(--amber)"></div>Set 1</div>
+        <div class="prog-legend-item"><div class="prog-legend-dot" style="background:var(--blue)"></div>Set 2</div>
+        <div class="prog-legend-item"><div class="prog-legend-dot" style="background:var(--green)"></div>Set 3</div>
+      </div>
+      <div class="prog-bump" id="progBump"></div>
+    </div>
+  </div>
+</section>
+
 </div>
 
 <script>
@@ -1984,6 +2100,151 @@ function switchRoute(type) {
   document.querySelectorAll('.route-toggle').forEach(b => {
     b.classList.toggle('active', b.textContent.toLowerCase().includes(type === 'train' ? 'training' : 'rest'));
   });
+}
+
+// RIR Calculator
+let selectedRIR = null;
+function selectEffort(btn, level) {
+  document.querySelectorAll('.rir-effort-btn').forEach(b => {
+    b.classList.remove('active-hard','active-near','active-fail');
+  });
+  const classMap = {hard:'active-hard', near:'active-near', fail:'active-fail'};
+  btn.classList.add(classMap[level]);
+  selectedRIR = parseInt(btn.dataset.rir);
+}
+
+function roundTo(val, step) {
+  return Math.round(val / step) * step;
+}
+
+function calculateRIR() {
+  const weight = parseFloat(document.getElementById('calcWeight').value);
+  const reps = parseInt(document.getElementById('calcReps').value);
+  const range = document.getElementById('calcRange').value.split('-').map(Number);
+  const rangeMin = range[0], rangeMax = range[1];
+
+  if (!weight || !reps || selectedRIR === null) {
+    alert('Fill in weight, reps, and select how hard it was.');
+    return;
+  }
+
+  // Max reps to failure at this weight
+  const maxReps = reps + selectedRIR;
+  // Epley e1RM
+  const e1rm = maxReps === 1 ? weight : weight * (1 + maxReps / 30);
+
+  const rpeRows = [
+    {rpe:'7',  rir:3, cls:'rpe-low'},
+    {rpe:'8',  rir:2, cls:'rpe-mid'},
+    {rpe:'9',  rir:1, cls:'rpe-high'},
+    {rpe:'10', rir:0, cls:'rpe-max'},
+  ];
+
+  const tbody = document.getElementById('rirTableBody');
+  tbody.innerHTML = '';
+
+  rpeRows.forEach(row => {
+    const repsAtWeight = Math.max(1, maxReps - row.rir);
+    if (repsAtWeight < 1) return;
+
+    let verdict, verdictClass, useWeight;
+
+    if (repsAtWeight >= rangeMin && repsAtWeight <= rangeMax) {
+      verdict = repsAtWeight + ' reps — in range';
+      verdictClass = 'color:var(--green)';
+      useWeight = weight + ' kg';
+    } else if (repsAtWeight < rangeMin) {
+      // Too heavy — need lighter weight to hit rangeMin at this RIR
+      const targetFailReps = rangeMin + row.rir;
+      const w = targetFailReps === 1 ? e1rm : e1rm / (1 + targetFailReps / 30);
+      const suggested = roundTo(w, 2.5);
+      verdict = repsAtWeight + ' reps — too heavy';
+      verdictClass = 'color:var(--red)';
+      useWeight = suggested + ' kg';
+    } else {
+      // Too light — need heavier weight to hit rangeMax at this RIR
+      const targetFailReps = rangeMax + row.rir;
+      const w = targetFailReps === 1 ? e1rm : e1rm / (1 + targetFailReps / 30);
+      const suggested = roundTo(w, 2.5);
+      verdict = repsAtWeight + ' reps — too light';
+      verdictClass = 'color:var(--orange)';
+      useWeight = suggested + ' kg';
+    }
+
+    const tr = document.createElement('tr');
+    tr.innerHTML =
+      `<td class="rpe-val ${row.cls}">${row.rpe}</td>` +
+      `<td style="font-family:'JetBrains Mono',monospace;font-weight:600">${repsAtWeight}</td>` +
+      `<td style="font-family:'Outfit',sans-serif;font-weight:500;${verdictClass}">${verdict}</td>` +
+      `<td style="font-family:'JetBrains Mono',monospace;font-weight:700">${useWeight}</td>`;
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById('rirResult').classList.add('show');
+
+  // Build progression graph
+  buildProgGraph(weight, rangeMin, rangeMax);
+}
+
+function buildProgGraph(weight, rangeMin, rangeMax) {
+  const sets = 3;
+  // Start: all sets at rangeMin. Each session, first set that hasn't hit rangeMax goes up by 1.
+  let current = [rangeMin, rangeMin, rangeMin];
+  const sessions = [];
+  sessions.push([...current]);
+
+  const maxIter = 30; // safety
+  let iter = 0;
+  while (iter++ < maxIter) {
+    if (current.every(r => r >= rangeMax)) break;
+    // Progress: bump the first set (left to right) that hasn't maxed out
+    const next = [...current];
+    for (let s = 0; s < sets; s++) {
+      if (next[s] < rangeMax) { next[s]++; break; }
+    }
+    current = next;
+    sessions.push([...current]);
+  }
+
+  const container = document.getElementById('progSessions');
+  container.innerHTML = '';
+
+  const barMaxHeight = 100; // px
+  // Scale: rangeMin-1 = 0 height, rangeMax = full height
+  const span = rangeMax - rangeMin + 1;
+
+  sessions.forEach((sess, i) => {
+    const col = document.createElement('div');
+    col.className = 'prog-session' + (i === sessions.length - 1 ? ' done' : '');
+
+    const bars = document.createElement('div');
+    bars.className = 'prog-bars';
+
+    const colors = ['s1','s2','s3'];
+    sess.forEach((reps, s) => {
+      const bar = document.createElement('div');
+      bar.className = 'prog-bar ' + colors[s];
+      const pct = ((reps - rangeMin + 1) / span) * barMaxHeight;
+      bar.style.height = Math.max(16, pct) + 'px';
+      bar.innerHTML = `<span>${reps}</span>`;
+      bars.appendChild(bar);
+    });
+
+    const label = document.createElement('div');
+    label.className = 'prog-session-label';
+    label.textContent = i === sessions.length - 1 ? 'Done!' : 'Wk ' + (i + 1);
+
+    col.appendChild(bars);
+    col.appendChild(label);
+    container.appendChild(col);
+  });
+
+  const nextWeight = roundTo(weight + 2.5, 2.5);
+  document.getElementById('progSub').textContent =
+    `${weight} kg — build from ${rangeMin}-${rangeMin}-${rangeMin} to ${rangeMax}-${rangeMax}-${rangeMax}, then increase weight.`;
+  document.getElementById('progBump').innerHTML =
+    `When you hit ${rangeMax}-${rangeMax}-${rangeMax} → go to <strong>${nextWeight} kg</strong> and restart at ${rangeMin}-${rangeMin}-${rangeMin}`;
+  document.getElementById('progGraph').classList.add('show');
 }
 </script>
 </body>
