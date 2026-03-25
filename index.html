@@ -178,6 +178,35 @@ body{font-family:'Outfit',sans-serif;color:var(--text);background:var(--bg);line
 .prog-legend-dot{width:10px;height:10px;border-radius:2px}
 .prog-bump{margin-top:1rem;padding:0.75rem 1rem;background:var(--green-bg);border:1px solid rgba(52,211,153,0.15);border-radius:6px;font-size:0.82rem;color:var(--green);font-weight:600}
 
+/* Inline Exercise Calculator */
+.ex-calc-toggle{display:inline-flex;align-items:center;gap:0.35rem;margin-top:0.75rem;padding:0.45rem 0.85rem;border:1px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--amber);font-family:'Outfit',sans-serif;font-size:0.78rem;font-weight:600;cursor:pointer;transition:all 0.2s}
+.ex-calc-toggle:hover{border-color:var(--amber);background:var(--amber-bg)}
+.ex-calc-panel{display:none;margin-top:0.75rem;padding:1rem;background:var(--surface);border:1px solid var(--border);border-radius:8px}
+.ex-calc-panel.open{display:block}
+.ex-calc-row{display:flex;gap:0.6rem;flex-wrap:wrap;margin-bottom:0.75rem;align-items:flex-end}
+.ex-calc-row .rir-calc-field{min-width:70px;flex:1}
+.ex-calc-effort{display:flex;gap:0.4rem;margin-bottom:0.75rem}
+.ex-calc-effort .rir-effort-btn{padding:0.45rem 0.4rem;font-size:0.72rem}
+.ex-calc-go{padding:0.5rem 1rem;border:none;border-radius:6px;background:var(--amber);color:#000;font-family:'Outfit',sans-serif;font-size:0.8rem;font-weight:700;cursor:pointer;transition:opacity 0.2s}
+.ex-calc-go:hover{opacity:0.85}
+.ex-calc-result{margin-top:0.75rem;display:none}
+.ex-calc-result.show{display:block}
+.ex-calc-result table{width:100%;border-collapse:collapse;font-size:0.78rem}
+.ex-calc-result th{padding:0.4rem 0.5rem;text-align:left;font-size:0.65rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;background:var(--surface2);border-bottom:1px solid var(--border)}
+.ex-calc-result td{padding:0.4rem 0.5rem;border-bottom:1px solid var(--border);font-family:'JetBrains Mono',monospace;font-weight:600;font-size:0.78rem}
+.ex-calc-result .rec{color:var(--green)}
+.ex-calc-prog{margin-top:0.75rem;padding:0.75rem;background:var(--surface2);border:1px solid var(--border);border-radius:6px;display:none}
+.ex-calc-prog.show{display:block}
+.ex-calc-prog h4{font-size:0.82rem;font-weight:700;color:var(--amber);margin-bottom:0.25rem}
+.ex-calc-prog .prog-graph-sub{font-size:0.72rem;margin-bottom:0.75rem}
+.ex-calc-prog .prog-sessions{gap:0}
+.ex-calc-prog .prog-bars{height:80px}
+.ex-calc-prog .prog-bar{width:28px}
+.ex-calc-prog .prog-bar span{font-size:0.6rem}
+.ex-calc-prog .prog-session{min-width:40px}
+.ex-calc-prog .prog-session-label{font-size:0.6rem}
+.ex-calc-prog .prog-bump{font-size:0.75rem;padding:0.5rem 0.75rem;margin-top:0.5rem}
+
 /* ── RESPONSIVE ── */
 .table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
 @media(max-width:640px){
@@ -2260,6 +2289,212 @@ function buildProgGraph(weight, rangeMin, rangeMax) {
   document.getElementById('progBump').innerHTML =
     `When you hit ${rangeMax}-${rangeMax}-${rangeMax} → go to <strong>${nextWeight} kg</strong> and restart at ${rangeMin}-${rangeMin}-${rangeMin}`;
   document.getElementById('progGraph').classList.add('show');
+}
+
+// Inline exercise calculators
+(function injectExCalcs() {
+  const workoutSections = ['upper-a','lower-a','upper-b','lower-b'];
+  let calcId = 0;
+
+  workoutSections.forEach(secId => {
+    const sec = document.getElementById(secId);
+    if (!sec) return;
+    sec.querySelectorAll('.exercise').forEach(ex => {
+      const body = ex.querySelector('.exercise-body');
+      if (!body) return;
+
+      // Parse rep range from first working set row
+      const workingRows = body.querySelectorAll('.badge-working');
+      if (!workingRows.length) return;
+      const firstWorkingRow = workingRows[0].closest('tr');
+      const repCell = firstWorkingRow.querySelector('.col-reps');
+      if (!repCell) return;
+      const repText = repCell.textContent.trim();
+      const repMatch = repText.match(/(\d+)[–-](\d+)/);
+      if (!repMatch) return;
+      const rangeMin = parseInt(repMatch[1]);
+      const rangeMax = parseInt(repMatch[2]);
+
+      // Parse working weight
+      const weightCell = firstWorkingRow.querySelector('.col-weight');
+      const weightText = weightCell ? weightCell.textContent.replace(/[^0-9.]/g,'') : '';
+      const defaultWeight = weightText ? parseFloat(weightText) : '';
+
+      const id = 'exc' + (calcId++);
+
+      // Toggle button
+      const toggle = document.createElement('button');
+      toggle.className = 'ex-calc-toggle';
+      toggle.innerHTML = '&#x1F4CA; Calculate My Weight';
+      toggle.onclick = function() {
+        const panel = document.getElementById(id);
+        panel.classList.toggle('open');
+      };
+
+      // Panel
+      const panel = document.createElement('div');
+      panel.className = 'ex-calc-panel';
+      panel.id = id;
+      panel.innerHTML =
+        `<div class="ex-calc-row">` +
+          `<div class="rir-calc-field"><label>Weight (kg)</label><input type="number" id="${id}-w" placeholder="${defaultWeight || 'kg'}" inputmode="decimal" step="0.5" value="${defaultWeight}"></div>` +
+          `<div class="rir-calc-field"><label>Reps done</label><input type="number" id="${id}-r" placeholder="reps" inputmode="numeric" min="1" max="30"></div>` +
+          `<div class="rir-calc-field"><label>Rep range</label><input type="text" value="${rangeMin}–${rangeMax}" disabled style="background:var(--surface2);color:var(--text-dim);text-align:center;width:100%;padding:0.55rem 0.75rem;border:1px solid var(--border);border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:0.85rem"></div>` +
+        `</div>` +
+        `<label style="display:block;font-size:0.65rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.4rem">How hard was it?</label>` +
+        `<div class="ex-calc-effort">` +
+          `<button class="rir-effort-btn" data-rir="2" data-id="${id}">Hard<br><span style="font-size:0.62rem;opacity:0.7">2 left</span></button>` +
+          `<button class="rir-effort-btn" data-rir="1" data-id="${id}">Near Failure<br><span style="font-size:0.62rem;opacity:0.7">1 left</span></button>` +
+          `<button class="rir-effort-btn" data-rir="0" data-id="${id}">Failure<br><span style="font-size:0.62rem;opacity:0.7">0 left</span></button>` +
+        `</div>` +
+        `<button class="ex-calc-go" onclick="runExCalc('${id}',${rangeMin},${rangeMax})">Calculate</button>` +
+        `<div class="ex-calc-result" id="${id}-result">` +
+          `<div class="table-scroll"><table><thead><tr><th>RPE</th><th>Reps</th><th>Verdict</th><th>Use</th></tr></thead><tbody id="${id}-tbody"></tbody></table></div>` +
+        `</div>` +
+        `<div class="ex-calc-prog" id="${id}-prog">` +
+          `<h4>Progression</h4>` +
+          `<p class="prog-graph-sub" id="${id}-progsub"></p>` +
+          `<div class="prog-sessions" id="${id}-sessions"></div>` +
+          `<div class="prog-legend" style="margin-top:0.5rem">` +
+            `<div class="prog-legend-item"><div class="prog-legend-dot" style="background:var(--amber)"></div>S1</div>` +
+            `<div class="prog-legend-item"><div class="prog-legend-dot" style="background:var(--blue)"></div>S2</div>` +
+            `<div class="prog-legend-item"><div class="prog-legend-dot" style="background:var(--green)"></div>S3</div>` +
+          `</div>` +
+          `<div class="prog-bump" id="${id}-bump"></div>` +
+        `</div>`;
+
+      // Effort button listeners
+      panel.querySelectorAll('.rir-effort-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const parent = this.closest('.ex-calc-effort');
+          parent.querySelectorAll('.rir-effort-btn').forEach(b => b.classList.remove('active-hard','active-near','active-fail'));
+          const rir = parseInt(this.dataset.rir);
+          this.classList.add(rir === 2 ? 'active-hard' : rir === 1 ? 'active-near' : 'active-fail');
+          this.closest('.ex-calc-panel').dataset.rir = rir;
+        });
+      });
+
+      body.appendChild(toggle);
+      body.appendChild(panel);
+    });
+  });
+})();
+
+function runExCalc(id, rangeMin, rangeMax) {
+  const weight = parseFloat(document.getElementById(id + '-w').value);
+  const reps = parseInt(document.getElementById(id + '-r').value);
+  const panel = document.getElementById(id);
+  const rir = panel.dataset.rir;
+
+  if (!weight || !reps || rir === undefined) {
+    alert('Fill in weight, reps, and select how hard it was.');
+    return;
+  }
+  const rirNum = parseInt(rir);
+  const maxReps = reps + rirNum;
+  const e1rm = maxReps === 1 ? weight : weight * (1 + maxReps / 30);
+
+  const rpeRows = [
+    {rpe:'7', rir:3, cls:'rpe-low'},
+    {rpe:'8', rir:2, cls:'rpe-mid'},
+    {rpe:'9', rir:1, cls:'rpe-high'},
+    {rpe:'10', rir:0, cls:'rpe-max'},
+  ];
+
+  const tbody = document.getElementById(id + '-tbody');
+  tbody.innerHTML = '';
+  let graphWeight = weight;
+
+  rpeRows.forEach(row => {
+    const repsAtWeight = Math.max(1, maxReps - row.rir);
+    let verdict, verdictClass, useWeight, useWeightNum;
+
+    if (repsAtWeight >= rangeMin && repsAtWeight <= rangeMax) {
+      verdict = repsAtWeight + ' — in range';
+      verdictClass = 'color:var(--green)';
+      useWeightNum = weight;
+      useWeight = weight + ' kg';
+    } else if (repsAtWeight < rangeMin) {
+      const tfr = rangeMin + row.rir;
+      const w = tfr === 1 ? e1rm : e1rm / (1 + tfr / 30);
+      const suggested = roundTo(w, 2.5);
+      verdict = repsAtWeight + ' — too heavy';
+      verdictClass = 'color:var(--red)';
+      useWeightNum = suggested;
+      useWeight = suggested + ' kg';
+    } else {
+      const tfr = rangeMax + row.rir;
+      const w = tfr === 1 ? e1rm : e1rm / (1 + tfr / 30);
+      const suggested = roundTo(w, 2.5);
+      verdict = repsAtWeight + ' — too light';
+      verdictClass = 'color:var(--orange)';
+      useWeightNum = suggested;
+      useWeight = suggested + ' kg';
+    }
+    if (row.rpe === '8') graphWeight = useWeightNum;
+
+    const tr = document.createElement('tr');
+    tr.innerHTML =
+      `<td class="rpe-val ${row.cls}">${row.rpe}</td>` +
+      `<td>${repsAtWeight}</td>` +
+      `<td style="font-family:'Outfit',sans-serif;font-weight:500;${verdictClass}">${verdict}</td>` +
+      `<td style="font-weight:700">${useWeight}</td>`;
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById(id + '-result').classList.add('show');
+
+  // Mini progression graph
+  const sets = 3;
+  let current = [rangeMin, rangeMin, rangeMin];
+  const sessions = [[...current]];
+  let iter = 0;
+  while (iter++ < 30) {
+    if (current.every(r => r >= rangeMax)) break;
+    const next = [...current];
+    for (let s = 0; s < sets; s++) { if (next[s] < rangeMax) { next[s]++; break; } }
+    current = next;
+    sessions.push([...current]);
+  }
+
+  const container = document.getElementById(id + '-sessions');
+  container.innerHTML = '';
+  const span = rangeMax - rangeMin + 1;
+  const barMaxH = 80;
+
+  sessions.forEach((sess, i) => {
+    const col = document.createElement('div');
+    col.className = 'prog-session' + (i === sessions.length - 1 ? ' done' : '');
+    const barsDiv = document.createElement('div');
+    barsDiv.className = 'prog-bars';
+    const colors = ['s1','s2','s3'];
+    sess.forEach((r, s) => {
+      const bar = document.createElement('div');
+      bar.className = 'prog-bar ' + colors[s];
+      bar.style.height = Math.max(14, ((r - rangeMin + 1) / span) * barMaxH) + 'px';
+      bar.innerHTML = `<span>${r}</span>`;
+      barsDiv.appendChild(bar);
+    });
+    const lbl = document.createElement('div');
+    lbl.className = 'prog-session-label';
+    lbl.textContent = i === sessions.length - 1 ? 'Done!' : (i + 1);
+    col.appendChild(barsDiv);
+    col.appendChild(lbl);
+    if (i > 0) {
+      const arrow = document.createElement('div');
+      arrow.className = 'prog-arrow';
+      arrow.textContent = '\u203A';
+      container.appendChild(arrow);
+    }
+    container.appendChild(col);
+  });
+
+  const nextW = roundTo(graphWeight + 2.5, 2.5);
+  document.getElementById(id + '-progsub').textContent =
+    `${graphWeight} kg — build from ${rangeMin}-${rangeMin}-${rangeMin} to ${rangeMax}-${rangeMax}-${rangeMax}`;
+  document.getElementById(id + '-bump').innerHTML =
+    `When you hit ${rangeMax}-${rangeMax}-${rangeMax} → go to <strong>${nextW} kg</strong>`;
+  document.getElementById(id + '-prog').classList.add('show');
 }
 </script>
 </body>
