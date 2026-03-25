@@ -212,6 +212,13 @@ body{font-family:'Outfit',sans-serif;color:var(--text);background:var(--bg);line
 .ex-calc-prog .prog-session-label{font-size:0.6rem}
 .ex-calc-prog .prog-bump{font-size:0.75rem;padding:0.5rem 0.75rem;margin-top:0.5rem}
 
+/* Set axis labels for progression charts */
+.prog-axis{display:flex;flex-direction:column-reverse;justify-content:flex-start;gap:2px;margin-right:0.35rem;padding-bottom:1.5rem}
+.prog-axis-label{font-family:'JetBrains Mono',monospace;font-size:0.55rem;font-weight:600;color:var(--text-muted);display:flex;align-items:center}
+.prog-axis-label.s1{color:var(--amber)}
+.prog-axis-label.s2{color:var(--blue)}
+.prog-axis-label.s3{color:var(--green)}
+
 /* ── RESPONSIVE ── */
 .table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
 @media(max-width:640px){
@@ -2256,6 +2263,19 @@ function buildProgGraph(weight, rangeMin, rangeMax) {
   // Scale: rangeMin-1 = 0 height, rangeMax = full height
   const span = rangeMax - rangeMin + 1;
 
+  // Set axis labels
+  const axis = document.createElement('div');
+  axis.className = 'prog-axis';
+  axis.style.height = barMaxHeight + 'px';
+  ['s1','s2','s3'].forEach((cls, i) => {
+    const lbl = document.createElement('div');
+    lbl.className = 'prog-axis-label ' + cls;
+    lbl.style.height = (barMaxHeight / 3) + 'px';
+    lbl.textContent = 'S' + (i + 1);
+    axis.appendChild(lbl);
+  });
+  container.appendChild(axis);
+
   sessions.forEach((sess, i) => {
     const col = document.createElement('div');
     col.className = 'prog-session' + (i === sessions.length - 1 ? ' done' : '');
@@ -2466,6 +2486,19 @@ function runExCalc(id, rangeMin, rangeMax) {
   container.innerHTML = '';
   const span = rangeMax - rangeMin + 1;
   const barMaxH = 80;
+
+  // Set axis labels
+  const axis = document.createElement('div');
+  axis.className = 'prog-axis';
+  axis.style.height = barMaxH + 'px';
+  ['s1','s2','s3'].forEach((cls, i) => {
+    const lbl = document.createElement('div');
+    lbl.className = 'prog-axis-label ' + cls;
+    lbl.style.height = (barMaxH / 3) + 'px';
+    lbl.textContent = 'S' + (i + 1);
+    axis.appendChild(lbl);
+  });
+  container.appendChild(axis);
 
   sessions.forEach((sess, i) => {
     const col = document.createElement('div');
