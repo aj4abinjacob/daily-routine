@@ -2021,6 +2021,10 @@ body{font-family:'Outfit',sans-serif;color:var(--text);background:var(--bg);line
         <input type="number" id="calcReps" placeholder="e.g. 8" inputmode="numeric" min="1" max="30">
       </div>
       <div class="rir-calc-field">
+        <label>Sets</label>
+        <input type="number" id="calcSets" placeholder="3" inputmode="numeric" min="1" max="6" value="3">
+      </div>
+      <div class="rir-calc-field">
         <label>Rep range</label>
         <select id="calcRange" style="width:100%;padding:0.55rem 0.75rem;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:0.85rem;outline:none">
           <option value="4-6">4–6</option>
@@ -2062,11 +2066,7 @@ body{font-family:'Outfit',sans-serif;color:var(--text);background:var(--bg);line
       <h3>Progression Roadmap</h3>
       <p class="prog-graph-sub" id="progSub"></p>
       <div class="prog-sessions" id="progSessions"></div>
-      <div class="prog-legend">
-        <div class="prog-legend-item"><div class="prog-legend-dot" style="background:var(--amber)"></div>Set 1</div>
-        <div class="prog-legend-item"><div class="prog-legend-dot" style="background:var(--blue)"></div>Set 2</div>
-        <div class="prog-legend-item"><div class="prog-legend-dot" style="background:var(--green)"></div>Set 3</div>
-      </div>
+      <div class="prog-legend" id="progLegend"></div>
       <div class="prog-bump" id="progBump"></div>
     </div>
   </div>
@@ -2164,6 +2164,7 @@ function calculateRIR() {
   const reps = parseInt(document.getElementById('calcReps').value);
   const range = document.getElementById('calcRange').value.split('-').map(Number);
   const rangeMin = range[0], rangeMax = range[1];
+  const sets = parseInt(document.getElementById('calcSets').value) || 3;
 
   if (!weight || !reps || selectedRIR === null) {
     alert('Fill in weight, reps, and select how hard it was.');
@@ -2233,25 +2234,20 @@ function calculateRIR() {
   document.getElementById('rirResult').classList.add('show');
 
   // Build progression graph using RPE 8 recommended weight
-  buildProgGraph(graphWeight, rangeMin, rangeMax);
+  buildProgGraph(graphWeight, rangeMin, rangeMax, sets);
 }
 
-function buildProgGraph(weight, rangeMin, rangeMax) {
-  const sets = 3;
-  // Start: all sets at rangeMin. Each session, first set that hasn't hit rangeMax goes up by 1.
-  let current = [rangeMin, rangeMin, rangeMin];
-  const sessions = [];
-  sessions.push([...current]);
+function buildProgGraph(weight, rangeMin, rangeMax, sets) {
+  sets = sets || 3;
+  const colors = ['s1','s2','s3','s1','s2','s3']; // cycle colors for 4+ sets
+  let current = Array(sets).fill(rangeMin);
+  const sessions = [[...current]];
 
-  const maxIter = 30; // safety
   let iter = 0;
-  while (iter++ < maxIter) {
+  while (iter++ < 50) {
     if (current.every(r => r >= rangeMax)) break;
-    // Progress: bump the first set (left to right) that hasn't maxed out
     const next = [...current];
-    for (let s = 0; s < sets; s++) {
-      if (next[s] < rangeMax) { next[s]++; break; }
-    }
+    for (let s = 0; s < sets; s++) { if (next[s] < rangeMax) { next[s]++; break; } }
     current = next;
     sessions.push([...current]);
   }
@@ -2259,45 +2255,38 @@ function buildProgGraph(weight, rangeMin, rangeMax) {
   const container = document.getElementById('progSessions');
   container.innerHTML = '';
 
-  const barMaxHeight = 100; // px
-  // Scale: rangeMin-1 = 0 height, rangeMax = full height
+  const barMaxHeight = 100;
   const span = rangeMax - rangeMin + 1;
 
   // Set axis labels
   const axis = document.createElement('div');
   axis.className = 'prog-axis';
   axis.style.height = barMaxHeight + 'px';
-  ['s1','s2','s3'].forEach((cls, i) => {
+  for (let s = 0; s < sets; s++) {
     const lbl = document.createElement('div');
-    lbl.className = 'prog-axis-label ' + cls;
-    lbl.style.height = (barMaxHeight / 3) + 'px';
-    lbl.textContent = 'S' + (i + 1);
+    lbl.className = 'prog-axis-label ' + colors[s];
+    lbl.style.height = (barMaxHeight / sets) + 'px';
+    lbl.textContent = 'S' + (s + 1);
     axis.appendChild(lbl);
-  });
+  }
   container.appendChild(axis);
 
   sessions.forEach((sess, i) => {
     const col = document.createElement('div');
     col.className = 'prog-session' + (i === sessions.length - 1 ? ' done' : '');
-
-    const bars = document.createElement('div');
-    bars.className = 'prog-bars';
-
-    const colors = ['s1','s2','s3'];
+    const barsDiv = document.createElement('div');
+    barsDiv.className = 'prog-bars';
     sess.forEach((reps, s) => {
       const bar = document.createElement('div');
       bar.className = 'prog-bar ' + colors[s];
-      const pct = ((reps - rangeMin + 1) / span) * barMaxHeight;
-      bar.style.height = Math.max(16, pct) + 'px';
+      bar.style.height = Math.max(16, ((reps - rangeMin + 1) / span) * barMaxHeight) + 'px';
       bar.innerHTML = `<span>${reps}</span>`;
-      bars.appendChild(bar);
+      barsDiv.appendChild(bar);
     });
-
     const label = document.createElement('div');
     label.className = 'prog-session-label';
     label.textContent = i === sessions.length - 1 ? 'Done!' : 'Wk ' + (i + 1);
-
-    col.appendChild(bars);
+    col.appendChild(barsDiv);
     col.appendChild(label);
     if (i > 0) {
       const arrow = document.createElement('div');
@@ -2308,11 +2297,22 @@ function buildProgGraph(weight, rangeMin, rangeMax) {
     container.appendChild(col);
   });
 
+  const repStr = Array(sets).fill(rangeMin).join('-');
+  const maxStr = Array(sets).fill(rangeMax).join('-');
   const nextWeight = roundTo(weight + 2.5, 2.5);
   document.getElementById('progSub').textContent =
-    `${weight} kg — build from ${rangeMin}-${rangeMin}-${rangeMin} to ${rangeMax}-${rangeMax}-${rangeMax}, then increase weight.`;
+    `${weight} kg — build from ${repStr} to ${maxStr}, then increase weight.`;
   document.getElementById('progBump').innerHTML =
-    `When you hit ${rangeMax}-${rangeMax}-${rangeMax} → go to <strong>${nextWeight} kg</strong> and restart at ${rangeMin}-${rangeMin}-${rangeMin}`;
+    `When you hit ${maxStr} → go to <strong>${nextWeight} kg</strong> and restart at ${repStr}`;
+  // Build legend
+  const colorVars = ['var(--amber)','var(--blue)','var(--green)','var(--amber)','var(--blue)','var(--green)'];
+  const legend = document.getElementById('progLegend');
+  if (legend) {
+    legend.innerHTML = '';
+    for (let s = 0; s < sets; s++) {
+      legend.innerHTML += `<div class="prog-legend-item"><div class="prog-legend-dot" style="background:${colorVars[s]}"></div>Set ${s+1}</div>`;
+    }
+  }
   document.getElementById('progGraph').classList.add('show');
 }
 
@@ -2340,6 +2340,9 @@ function buildProgGraph(weight, rangeMin, rangeMax) {
       const rangeMin = parseInt(repMatch[1]);
       const rangeMax = parseInt(repMatch[2]);
 
+      // Count working sets
+      const numSets = workingRows.length;
+
       // Parse working weight
       const weightCell = firstWorkingRow.querySelector('.col-weight');
       const weightText = weightCell ? weightCell.textContent.replace(/[^0-9.]/g,'') : '';
@@ -2361,7 +2364,7 @@ function buildProgGraph(weight, rangeMin, rangeMax) {
       panel.className = 'ex-calc-panel';
       panel.id = id;
       panel.innerHTML =
-        `<div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:0.75rem">Programme target: <span style="color:var(--purple);font-family:'JetBrains Mono',monospace;font-weight:700">${rangeMin}–${rangeMax} reps</span></div>` +
+        `<div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:0.75rem">Programme target: <span style="color:var(--purple);font-family:'JetBrains Mono',monospace;font-weight:700">${numSets} × ${rangeMin}–${rangeMax} reps</span></div>` +
         `<div class="ex-calc-row">` +
           `<div class="rir-calc-field"><label>Weight (kg)</label><input type="number" id="${id}-w" placeholder="${defaultWeight || 'kg'}" inputmode="decimal" step="0.5" value="${defaultWeight}"></div>` +
           `<div class="rir-calc-field"><label>Reps done</label><input type="number" id="${id}-r" placeholder="reps" inputmode="numeric" min="1" max="30"></div>` +
@@ -2372,7 +2375,7 @@ function buildProgGraph(weight, rangeMin, rangeMax) {
           `<button class="rir-effort-btn" data-rir="1" data-id="${id}">Near Failure<br><span style="font-size:0.62rem;opacity:0.7">1 left</span></button>` +
           `<button class="rir-effort-btn" data-rir="0" data-id="${id}">Failure<br><span style="font-size:0.62rem;opacity:0.7">0 left</span></button>` +
         `</div>` +
-        `<button class="ex-calc-go" onclick="runExCalc('${id}',${rangeMin},${rangeMax})">Calculate</button>` +
+        `<button class="ex-calc-go" onclick="runExCalc('${id}',${rangeMin},${rangeMax},${numSets})">Calculate</button>` +
         `<div class="ex-calc-result" id="${id}-result">` +
           `<div class="table-scroll"><table><thead><tr><th>RPE</th><th>Reps</th><th>Verdict</th><th>Use</th></tr></thead><tbody id="${id}-tbody"></tbody></table></div>` +
         `</div>` +
@@ -2380,11 +2383,7 @@ function buildProgGraph(weight, rangeMin, rangeMax) {
           `<h4>Progression</h4>` +
           `<p class="prog-graph-sub" id="${id}-progsub"></p>` +
           `<div class="prog-sessions" id="${id}-sessions"></div>` +
-          `<div class="prog-legend" style="margin-top:0.5rem">` +
-            `<div class="prog-legend-item"><div class="prog-legend-dot" style="background:var(--amber)"></div>S1</div>` +
-            `<div class="prog-legend-item"><div class="prog-legend-dot" style="background:var(--blue)"></div>S2</div>` +
-            `<div class="prog-legend-item"><div class="prog-legend-dot" style="background:var(--green)"></div>S3</div>` +
-          `</div>` +
+          `<div class="prog-legend" id="${id}-legend" style="margin-top:0.5rem"></div>` +
           `<div class="prog-bump" id="${id}-bump"></div>` +
         `</div>`;
 
@@ -2405,7 +2404,8 @@ function buildProgGraph(weight, rangeMin, rangeMax) {
   });
 })();
 
-function runExCalc(id, rangeMin, rangeMax) {
+function runExCalc(id, rangeMin, rangeMax, numSets) {
+  numSets = numSets || 3;
   const weight = parseFloat(document.getElementById(id + '-w').value);
   const reps = parseInt(document.getElementById(id + '-r').value);
   const panel = document.getElementById(id);
@@ -2418,6 +2418,8 @@ function runExCalc(id, rangeMin, rangeMax) {
   const rirNum = parseInt(rir);
   const maxReps = reps + rirNum;
   const e1rm = maxReps === 1 ? weight : weight * (1 + maxReps / 30);
+  const colors = ['s1','s2','s3','s1','s2','s3'];
+  const colorVars = ['var(--amber)','var(--blue)','var(--green)','var(--amber)','var(--blue)','var(--green)'];
 
   const rpeRows = [
     {rpe:'7', rir:3, cls:'rpe-low'},
@@ -2470,14 +2472,13 @@ function runExCalc(id, rangeMin, rangeMax) {
   document.getElementById(id + '-result').classList.add('show');
 
   // Mini progression graph
-  const sets = 3;
-  let current = [rangeMin, rangeMin, rangeMin];
+  let current = Array(numSets).fill(rangeMin);
   const sessions = [[...current]];
   let iter = 0;
-  while (iter++ < 30) {
+  while (iter++ < 50) {
     if (current.every(r => r >= rangeMax)) break;
     const next = [...current];
-    for (let s = 0; s < sets; s++) { if (next[s] < rangeMax) { next[s]++; break; } }
+    for (let s = 0; s < numSets; s++) { if (next[s] < rangeMax) { next[s]++; break; } }
     current = next;
     sessions.push([...current]);
   }
@@ -2491,13 +2492,13 @@ function runExCalc(id, rangeMin, rangeMax) {
   const axis = document.createElement('div');
   axis.className = 'prog-axis';
   axis.style.height = barMaxH + 'px';
-  ['s1','s2','s3'].forEach((cls, i) => {
+  for (let s = 0; s < numSets; s++) {
     const lbl = document.createElement('div');
-    lbl.className = 'prog-axis-label ' + cls;
-    lbl.style.height = (barMaxH / 3) + 'px';
-    lbl.textContent = 'S' + (i + 1);
+    lbl.className = 'prog-axis-label ' + colors[s];
+    lbl.style.height = (barMaxH / numSets) + 'px';
+    lbl.textContent = 'S' + (s + 1);
     axis.appendChild(lbl);
-  });
+  }
   container.appendChild(axis);
 
   sessions.forEach((sess, i) => {
@@ -2505,7 +2506,6 @@ function runExCalc(id, rangeMin, rangeMax) {
     col.className = 'prog-session' + (i === sessions.length - 1 ? ' done' : '');
     const barsDiv = document.createElement('div');
     barsDiv.className = 'prog-bars';
-    const colors = ['s1','s2','s3'];
     sess.forEach((r, s) => {
       const bar = document.createElement('div');
       bar.className = 'prog-bar ' + colors[s];
@@ -2527,11 +2527,22 @@ function runExCalc(id, rangeMin, rangeMax) {
     container.appendChild(col);
   });
 
+  // Dynamic legend
+  const legend = document.getElementById(id + '-legend');
+  if (legend) {
+    legend.innerHTML = '';
+    for (let s = 0; s < numSets; s++) {
+      legend.innerHTML += `<div class="prog-legend-item"><div class="prog-legend-dot" style="background:${colorVars[s]}"></div>S${s+1}</div>`;
+    }
+  }
+
+  const repStr = Array(numSets).fill(rangeMin).join('-');
+  const maxStr = Array(numSets).fill(rangeMax).join('-');
   const nextW = roundTo(graphWeight + 2.5, 2.5);
   document.getElementById(id + '-progsub').textContent =
-    `${graphWeight} kg — build from ${rangeMin}-${rangeMin}-${rangeMin} to ${rangeMax}-${rangeMax}-${rangeMax}`;
+    `${graphWeight} kg — build from ${repStr} to ${maxStr}`;
   document.getElementById(id + '-bump').innerHTML =
-    `When you hit ${rangeMax}-${rangeMax}-${rangeMax} → go to <strong>${nextW} kg</strong>`;
+    `When you hit ${maxStr} → go to <strong>${nextW} kg</strong>`;
   document.getElementById(id + '-prog').classList.add('show');
 }
 </script>
