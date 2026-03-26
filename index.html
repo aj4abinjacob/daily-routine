@@ -163,7 +163,7 @@ body{font-family:'Outfit',sans-serif;color:var(--text);background:var(--bg);line
 .prog-graph.show{display:block}
 .prog-graph h3{font-size:0.95rem;font-weight:700;color:var(--amber);margin-bottom:0.35rem}
 .prog-graph-sub{font-size:0.78rem;color:var(--text-muted);margin-bottom:1.25rem}
-.prog-sessions{display:flex;gap:0;align-items:flex-end;overflow-x:auto;padding-bottom:0.5rem;-webkit-overflow-scrolling:touch}
+.prog-sessions{display:flex;gap:0;align-items:flex-end;overflow-x:auto;padding-bottom:0.5rem;padding-top:1.2rem;-webkit-overflow-scrolling:touch}
 .prog-session{display:flex;flex-direction:column;align-items:center;min-width:52px;gap:0.3rem}
 .prog-session-label{font-size:0.65rem;color:var(--text-muted);font-weight:600;white-space:nowrap}
 .prog-arrow{display:flex;align-items:center;color:var(--text-muted);font-size:0.75rem;padding:0 0.15rem;margin-bottom:1.2rem}
@@ -175,6 +175,11 @@ body{font-family:'Outfit',sans-serif;color:var(--text);background:var(--bg);line
 .prog-bar.s3{background:var(--green)}
 .prog-session.done{opacity:1}
 .prog-session.done .prog-session-label{color:var(--green)}
+.prog-session.current{position:relative}
+.prog-session.current::before{content:'YOU';position:absolute;top:-1.3rem;left:50%;transform:translateX(-50%);font-size:0.5rem;font-weight:800;color:var(--purple);letter-spacing:0.06em;white-space:nowrap}
+.prog-session.current::after{content:'▲';position:absolute;bottom:-1.1rem;left:50%;transform:translateX(-50%);color:var(--purple);font-size:0.7rem;line-height:1}
+.prog-session.current .prog-session-label{color:var(--purple);font-weight:800}
+.prog-session.current .prog-bar{box-shadow:0 0 0 2px var(--purple)}
 .prog-legend{display:flex;gap:1rem;margin-top:0.75rem;flex-wrap:wrap}
 .prog-legend-item{display:flex;align-items:center;gap:0.35rem;font-size:0.72rem;color:var(--text-dim)}
 .prog-legend-dot{width:10px;height:10px;border-radius:2px}
@@ -2229,6 +2234,7 @@ function calculateRIR() {
   tbody.innerHTML = '';
 
   let graphWeight = weight; // will be updated to RPE 8 recommended weight
+  let graphReps = null; // reps at RPE 8 — shows where user is in progression
 
   rpeRows.forEach(row => {
     const repsAtWeight = Math.max(1, maxReps - row.rir);
@@ -2242,7 +2248,6 @@ function calculateRIR() {
       useWeightNum = weight;
       useWeight = weight + ' kg';
     } else if (repsAtWeight < rangeMin) {
-      // Too heavy — need lighter weight to hit rangeMin at this RIR
       const targetFailReps = rangeMin + row.rir;
       const w = targetFailReps === 1 ? e1rm : e1rm / (1 + targetFailReps / 30);
       const suggested = roundTo(w, 2.5);
@@ -2251,7 +2256,6 @@ function calculateRIR() {
       useWeightNum = suggested;
       useWeight = suggested + ' kg';
     } else {
-      // Too light — need heavier weight to hit rangeMax at this RIR
       const targetFailReps = rangeMax + row.rir;
       const w = targetFailReps === 1 ? e1rm : e1rm / (1 + targetFailReps / 30);
       const suggested = roundTo(w, 2.5);
@@ -2261,8 +2265,8 @@ function calculateRIR() {
       useWeight = suggested + ' kg';
     }
 
-    // Use RPE 8 weight for the progression graph (main working set target)
-    if (row.rpe === '8') graphWeight = useWeightNum;
+    // Use RPE 8 weight and reps for the progression graph
+    if (row.rpe === '8') { graphWeight = useWeightNum; graphReps = repsAtWeight; }
 
     const tr = document.createElement('tr');
     tr.innerHTML =
@@ -2276,12 +2280,12 @@ function calculateRIR() {
   document.getElementById('rirResult').classList.add('show');
 
   // Build progression graph using RPE 8 recommended weight
-  buildProgGraph(graphWeight, rangeMin, rangeMax, sets);
+  buildProgGraph(graphWeight, rangeMin, rangeMax, sets, graphReps);
 }
 
-function buildProgGraph(weight, rangeMin, rangeMax, sets) {
+function buildProgGraph(weight, rangeMin, rangeMax, sets, userReps) {
   sets = sets || 3;
-  const colors = ['s1','s2','s3','s1','s2','s3']; // cycle colors for 4+ sets
+  const colors = ['s1','s2','s3','s1','s2','s3'];
   let current = Array(sets).fill(rangeMin);
   const sessions = [[...current]];
 
@@ -2293,6 +2297,11 @@ function buildProgGraph(weight, rangeMin, rangeMax, sets) {
     current = next;
     sessions.push([...current]);
   }
+
+  // Find which session matches the user's current reps
+  // Session where all sets = R is at index (R - rangeMin) * sets
+  const clampedReps = userReps != null ? Math.min(Math.max(userReps, rangeMin), rangeMax) : null;
+  const currentIdx = clampedReps != null ? (clampedReps - rangeMin) * sets : -1;
 
   const container = document.getElementById('progSessions');
   container.innerHTML = '';
@@ -2315,7 +2324,10 @@ function buildProgGraph(weight, rangeMin, rangeMax, sets) {
 
   sessions.forEach((sess, i) => {
     const col = document.createElement('div');
-    col.className = 'prog-session' + (i === sessions.length - 1 ? ' done' : '');
+    let cls = 'prog-session';
+    if (i === sessions.length - 1) cls += ' done';
+    if (i === currentIdx) cls += ' current';
+    col.className = cls;
     const barsDiv = document.createElement('div');
     barsDiv.className = 'prog-bars';
     sess.forEach((reps, s) => {
@@ -2327,7 +2339,7 @@ function buildProgGraph(weight, rangeMin, rangeMax, sets) {
     });
     const label = document.createElement('div');
     label.className = 'prog-session-label';
-    label.textContent = i === sessions.length - 1 ? 'Done!' : 'Wk ' + (i + 1);
+    label.textContent = i === currentIdx ? 'You' : i === sessions.length - 1 ? 'Done!' : 'Wk ' + (i + 1);
     col.appendChild(barsDiv);
     col.appendChild(label);
     if (i > 0) {
@@ -2339,11 +2351,20 @@ function buildProgGraph(weight, rangeMin, rangeMax, sets) {
     container.appendChild(col);
   });
 
+  // Auto-scroll to current position
+  if (currentIdx >= 0 && currentIdx < sessions.length) {
+    const cols = container.querySelectorAll('.prog-session');
+    if (cols[currentIdx]) setTimeout(() => cols[currentIdx].scrollIntoView({behavior:'smooth', block:'nearest', inline:'center'}), 100);
+  }
+
   const repStr = Array(sets).fill(rangeMin).join('-');
   const maxStr = Array(sets).fill(rangeMax).join('-');
   const nextWeight = roundTo(weight + 2.5, 2.5);
+  const remaining = currentIdx >= 0 && currentIdx < sessions.length ? sessions.length - 1 - currentIdx : null;
   document.getElementById('progSub').textContent =
-    `${weight} kg — build from ${repStr} to ${maxStr}, then increase weight.`;
+    remaining !== null
+      ? `${weight} kg — you're at step ${currentIdx + 1} of ${sessions.length}` + (remaining > 0 ? `, ${remaining} to go` : ' — ready to increase!')
+      : `${weight} kg — build from ${repStr} to ${maxStr}, then increase weight.`;
   document.getElementById('progBump').innerHTML =
     `When you hit ${maxStr} → go to <strong>${nextWeight} kg</strong> and restart at ${repStr}`;
   // Build legend
@@ -2473,6 +2494,7 @@ function runExCalc(id, rangeMin, rangeMax, numSets) {
   const tbody = document.getElementById(id + '-tbody');
   tbody.innerHTML = '';
   let graphWeight = weight;
+  let graphReps = null;
 
   rpeRows.forEach(row => {
     const repsAtWeight = Math.max(1, maxReps - row.rir);
@@ -2500,7 +2522,7 @@ function runExCalc(id, rangeMin, rangeMax, numSets) {
       useWeightNum = suggested;
       useWeight = suggested + ' kg';
     }
-    if (row.rpe === '8') graphWeight = useWeightNum;
+    if (row.rpe === '8') { graphWeight = useWeightNum; graphReps = repsAtWeight; }
 
     const tr = document.createElement('tr');
     tr.innerHTML =
@@ -2525,6 +2547,11 @@ function runExCalc(id, rangeMin, rangeMax, numSets) {
     sessions.push([...current]);
   }
 
+  // Find current position based on RPE 8 reps
+  // Session where all sets = R is at index (R - rangeMin) * numSets
+  const clampedReps = graphReps != null ? Math.min(Math.max(graphReps, rangeMin), rangeMax) : null;
+  const currentIdx = clampedReps != null ? (clampedReps - rangeMin) * numSets : -1;
+
   const container = document.getElementById(id + '-sessions');
   container.innerHTML = '';
   const span = rangeMax - rangeMin + 1;
@@ -2545,7 +2572,10 @@ function runExCalc(id, rangeMin, rangeMax, numSets) {
 
   sessions.forEach((sess, i) => {
     const col = document.createElement('div');
-    col.className = 'prog-session' + (i === sessions.length - 1 ? ' done' : '');
+    let cls = 'prog-session';
+    if (i === sessions.length - 1) cls += ' done';
+    if (i === currentIdx) cls += ' current';
+    col.className = cls;
     const barsDiv = document.createElement('div');
     barsDiv.className = 'prog-bars';
     sess.forEach((r, s) => {
@@ -2557,7 +2587,7 @@ function runExCalc(id, rangeMin, rangeMax, numSets) {
     });
     const lbl = document.createElement('div');
     lbl.className = 'prog-session-label';
-    lbl.textContent = i === sessions.length - 1 ? 'Done!' : (i + 1);
+    lbl.textContent = i === currentIdx ? 'You' : i === sessions.length - 1 ? 'Done!' : (i + 1);
     col.appendChild(barsDiv);
     col.appendChild(lbl);
     if (i > 0) {
@@ -2568,6 +2598,12 @@ function runExCalc(id, rangeMin, rangeMax, numSets) {
     }
     container.appendChild(col);
   });
+
+  // Auto-scroll to current position
+  if (currentIdx >= 0 && currentIdx < sessions.length) {
+    const cols = container.querySelectorAll('.prog-session');
+    if (cols[currentIdx]) setTimeout(() => cols[currentIdx].scrollIntoView({behavior:'smooth', block:'nearest', inline:'center'}), 100);
+  }
 
   // Dynamic legend
   const legend = document.getElementById(id + '-legend');
@@ -2581,12 +2617,17 @@ function runExCalc(id, rangeMin, rangeMax, numSets) {
   const repStr = Array(numSets).fill(rangeMin).join('-');
   const maxStr = Array(numSets).fill(rangeMax).join('-');
   const nextW = roundTo(graphWeight + 2.5, 2.5);
+  const remaining = currentIdx >= 0 && currentIdx < sessions.length ? sessions.length - 1 - currentIdx : null;
   document.getElementById(id + '-progsub').textContent =
-    `${graphWeight} kg — build from ${repStr} to ${maxStr}`;
+    remaining !== null
+      ? `${graphWeight} kg — step ${currentIdx + 1} of ${sessions.length}` + (remaining > 0 ? `, ${remaining} to go` : ' — ready to increase!')
+      : `${graphWeight} kg — build from ${repStr} to ${maxStr}`;
   document.getElementById(id + '-bump').innerHTML =
     `When you hit ${maxStr} → go to <strong>${nextW} kg</strong>`;
   document.getElementById(id + '-prog').classList.add('show');
 }
+
+
 </script>
 </body>
 </html>
